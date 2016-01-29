@@ -30,13 +30,13 @@ python calculate_nonsynonymous_sites.py
 # 4min 30seconds for all genes
 
 # Remove tanscripts with errors (N as nucleotide or not multiple of 3) & non protein coding
-grep -Pv 'coding\tNA' N_per_transcript.tsv | fgrep 'gene_biotype:protein_coding transcript_biotype:protein_coding' > N_per_transcript_clean.tsv
+grep -Pv 'coding\tNA' nonsynonymous_sites_per_transcript.tsv | fgrep 'gene_biotype:protein_coding transcript_biotype:protein_coding' > nonsynonymous_sites_per_transcript_clean.tsv
 
 # remove variable names from every line
-sed -i 's/[[:space:]]transcript_biotype:/\t/g;s/[[:space:]]gene_biotype:/\t/g;s/[[:space:]]gene:/\t/g;s/[[:space:]]chromosome:/\t/g;s/[[:space:]]supercontig:/\t/g;s/[[:space:]]cds:/\t/g;s/:/\t/g' N_per_transcript_clean.tsv
+sed -i 's/[[:space:]]transcript_biotype:/\t/g;s/[[:space:]]gene_biotype:/\t/g;s/[[:space:]]gene:/\t/g;s/[[:space:]]chromosome:/\t/g;s/[[:space:]]supercontig:/\t/g;s/[[:space:]]cds:/\t/g;s/:/\t/g' nonsynonymous_sites_per_transcript_clean.tsv
 
 # add variable names to heading
-sed -i '1s/^/transcript\tcds\tgenome\tchromosome\tstart\tend\tstrand\tgene\tgene_biotype\ttranscript_biotype\tnonsynonymous_sites\tcds_length\terror\n/' N_per_transcript_clean.tsv
+sed -i '1s/^/transcript\tcds\tgenome\tchromosome\tstart\tend\tstrand\tgene\tgene_biotype\ttranscript_biotype\tnonsynonymous_sites\tcds_length\terror\n/' nonsynonymous_sites_per_transcript_clean.tsv
 
 ###############################################################################
 ####### Calculate (non)synonymous mutations by transcript from ICGC VCF #######

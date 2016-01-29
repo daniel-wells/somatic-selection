@@ -139,7 +139,7 @@ for cds in fasta_reader("data/raw/Homo_sapiens.GRCh37.75.cds.all.fa"):
 
 # Write data to tsv file
 import csv
-with open("data/N_per_transcript.tsv", 'w') as csvfile:
+with open("data/nonsynonymous_sites_per_transcript.tsv", 'w') as csvfile:
     writer = csv.writer(csvfile, delimiter='\t',quotechar='|', quoting=csv.QUOTE_MINIMAL)
     writer.writerows(N_per_cds_total)
-print "Data written to data/N_per_transcript.tsv"
+print "Data written to data/nonsynonymous_sites_per_transcript.tsv"
