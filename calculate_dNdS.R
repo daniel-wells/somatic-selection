@@ -11,22 +11,8 @@ synon.count <- variations[variant.class=="synonymous_variant",list(S=sum(donors.
 
 nonsynon.count <- variations[variant.class=="missense_variant" | variant.class=="frameshift_variant" | variant.class=="disruptive_inframe_deletion" | variant.class=="disruptive_inframe_insertion" | variant.class=="inframe_deletion" | variant.class=="inframe_insertion" | variant.class=="start_lost" | variant.class=="stop_lost", list(N=sum(donors.affected)), by=list(transcript.id)]
 
-# NorS.variations <- variations[variant.class=="missense_variant" | variant.class=="synonymous_variant",]
-
-#ENST00000000233
-# ENST00000288602 #BRAF
-
-#synon.count <- NorS.variations[,list(S=sum(variant.class=="synonymous_variant")), by=list(transcript.id)]
-#nonsynon.count <- NorS.variations[, list(N=sum(variant.class=="missense_variant")), by=list(transcript.id)]
-# 81,216 unique transcripts
-
-#nonsynon.count <- variations[variant.class=="missense_variant", list(N=.N), by=list(transcript.id)]
-#synon.count <- variations[variant.class=="synonymous_variant", list(S=.N), by=list(transcript.id)]
 setkey(synon.count,transcript.id)
 setkey(nonsynon.count,transcript.id)
-
-# All rows in nonsynon.count with rows in synon.count which match (as 0 counts included previously length stays same)
-#counts <- synon.count[nonsynon.count,]
 
 # Full outer join
 counts <- merge(synon.count,nonsynon.count, all=TRUE)
@@ -35,10 +21,6 @@ setkey(counts, transcript.id)
 # 3,270, now 3366
 # counts[is.na(N),]
 # 514, now 413
-
-variations[,gene.name, by=transcript.id]
-
-#transcript.gene <- unique(variations[variant.class=="missense_variant" | variant.class=="synonymous_variant",gene.name, by=transcript.id])
 
 transcript.gene <- unique(variations[variant.class!="exon_variant",gene.name, by=transcript.id])
 setkey(transcript.gene, transcript.id)

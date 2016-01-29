@@ -65,10 +65,6 @@ sha256sum -c data/raw/SHA256SUMS
 
 # Subset only synon or non-synon for dnds calculation
 # NB this removes genes which were sequenced but have non measured synon or non-synon variations
-
-# zgrep 'missense_variant\|synonymous_variant' data/raw/simple_somatic_mutation.aggregated.vcf.gz > data/simple_somatic_mutation.aggregated.coding.vcf
-# 1,300,483 lines
-
 zgrep 'missense_variant\|synonymous_variant\|frameshift_variant\|disruptive_inframe_deletion\|disruptive_inframe_insertion\|inframe_deletion\|inframe_insertion\|start_lost\|stop_lost\|exon_variant' data/raw/simple_somatic_mutation.aggregated.vcf.gz > data/simple_somatic_mutation.aggregated.filtered.vcf
 # 2min40s
 # 1,942,374 lines
