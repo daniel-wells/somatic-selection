@@ -63,21 +63,18 @@ sha256sum -c data/raw/SHA256SUMS
 # To keep headers (modify grep to append), or modify below by egrep '(^#|missense_variant)'
 # head -13 simple_somatic_mutation.aggregated.vcf > simple_somatic_mutation.aggregated.coding.vcf
 
-# Subset only synon or non-synon for dnds calculation
-# NB this removes genes which were sequenced but have non measured synon or non-synon variations
+# Remove lines which are irrelevant (e.g. only intron, intergenic)
 zgrep 'missense_variant\|synonymous_variant\|frameshift_variant\|disruptive_inframe_deletion\|disruptive_inframe_insertion\|inframe_deletion\|inframe_insertion\|start_lost\|stop_lost\|exon_variant' data/raw/simple_somatic_mutation.aggregated.vcf.gz > data/simple_somatic_mutation.aggregated.filtered.vcf
 # 2min40s
 # 1,942,374 lines
 
 # Create table with each variant annotation pair on seperate line
-python code/flatten_vcf.py data/simple_somatic_mutation.aggregated.coding.vcf > data/mutation_by_transcript.tsv
-# 41 seconds
-# 8.76 million lines
-
 python code/flatten_vcf.py data/simple_somatic_mutation.aggregated.filtered.vcf > data/observed_variants_by_transcript.tsv
 # 1 min
 # 12,857,317 lines
 
+# Subset only synon or non-synon for dnds calculation
+# NB this removes genes which were sequenced but have non measured synon or non-synon variations
 zgrep 'missense_variant\|synonymous_variant\|frameshift_variant\|disruptive_inframe_deletion\|disruptive_inframe_insertion\|inframe_deletion\|inframe_insertion\|start_lost\|stop_lost\|exon_variant' data/observed_variants_by_transcript.tsv > data/observed_variants_by_transcript.filtered.tsv
 
 module load apps/R/3.2.2/gcc-4.4.7+lapack-3.5.0+blas-20110419
