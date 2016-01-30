@@ -1,3 +1,5 @@
+# create on the command line by:
+# dot -Tpng data_flow_diagram.gv -o data_flow_diagram.png
 digraph dfd2{
 	graph [ dpi = 150 ]; 
         node[shape=record]
