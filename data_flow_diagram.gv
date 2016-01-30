@@ -1,0 +1,76 @@
+digraph dfd2{
+	graph [ dpi = 150 ]; 
+        node[shape=record]
+        subgraph level0{
+        enti1 [label="Fasta | Ensembl", style=filled, fillcolor=yellow];
+        enti2 [label="VFC | ICGC aggregated", style=filled, fillcolor=yellow];
+                        {rank=same; enti1, enti2}
+
+        enti5 [label="nonsynonymous_sites_per_transcript.tsv" shape=box, style=filled, fillcolor=lightblue];
+        enti6 [label="nonsynonymous_sites_per_transcript_clean.tsv" shape=box, style=filled, fillcolor=lightblue];
+        enti8 [label="observed_variants_by_transcript.tsv" shape=box, style=filled, fillcolor=lightblue];
+        enti9 [label="dNdS_by_transcript.tsv" shape=box, style=filled, fillcolor=lightblue];
+        enti10 [label="dNdS_by_gene.tsv" shape=box, style=filled, fillcolor=green];
+        enti11 [label="Graphs.pdf" shape=box, style=filled, fillcolor=green];
+        enti14 [label="simple_somatic_mutation.aggregated.filtered.vcf" shape=box, style=filled, fillcolor=lightblue];
+        enti15 [label="observed_variants_by_transcript.filtered.tsv" shape=box, style=filled, fillcolor=lightblue];
+
+        proc1 [label="calculate_nonsynonsites.py}" shape=Mrecord];
+        proc2 [label="{dNdS.sh | Remove NA entries,\n add header,\n remove variable names}" shape=Mrecord];
+        proc3 [label="calculate_dNdS.R}" shape=Mrecord];
+        proc4 [label="analyse_dNdS.R}" shape=Mrecord];
+        proc5 [label="flatten_vcf.py}" shape=Mrecord];
+        proc8 [label="{dNdS.sh|Download Raw Data}" shape=Mrecord];
+        proc9 [label="{dNdS.sh|Filter}" shape=Mrecord];
+        proc10 [label="{dNdS.sh|Filter}" shape=Mrecord];
+        }
+
+       subgraph cluster_level1{
+                        label ="Annotations" rank="max";
+        		enti3 [label="Biomart Export" shape=box, style=filled, fillcolor=yellow];
+	        	enti4 [label="Vogelstein Cancer List" shape=box, style=filled, fillcolor=yellow];
+	        	enti12 [label="TGCA RNAseq" shape=box, style=filled, fillcolor=yellow];
+
+			enti7 [label="tgca_RNAseq.total.tsv" shape=box, style=filled, fillcolor=lightblue];
+			enti13 [label="RNAseq.by.gene.tsv" shape=box, style=filled, fillcolor=lightblue];
+
+	        	proc6 [label="tgca_expression.R}" shape=Mrecord];
+	        	proc7 [label="expression_analysis.R}" shape=Mrecord];
+
+                       # store1 [label="<f0>    |<f1> Data store one"];
+                       # store2 [label="<f0>   |<f1> Data store two"];
+                       # {rank=same; store1, store2}
+
+        }
+
+	subgraph cluster_level2{
+                        label ="Key" fontsize="25" rank="min";
+        		raw [label="Raw Data" shape=box, style=filled, fillcolor=yellow];
+			data [label="Intermediate Data" shape=box, style=filled, fillcolor=lightblue];
+		       results [label="Result" shape=box, style=filled, fillcolor=green];
+	        	script [label="Script" shape=Mrecord];
+        }
+
+	# Download Data
+	proc8 -> {enti1, enti2,enti3,enti4,enti12}
+	
+	# Ensembl Fasta
+        enti1 -> proc1 -> enti5 -> proc2 -> enti6 -> proc3
+
+	# ICGC VCF
+	enti2 -> proc9 -> enti14 -> proc5-> enti8-> proc10-> enti15 -> proc3
+
+	# Calculate dNdS to results
+	proc3 -> enti9 -> proc4 -> {enti10 enti11}
+
+	# Add annotations
+	{enti3,enti4} -> proc4 
+
+	# RNA Expression
+	enti12 -> proc6 -> enti7 -> proc7 -> enti13 -> proc4
+
+	# Key
+#	raw -> script -> data -> results [style=invis]
+	 enti9 -> script  [style=invis, minlen=2]
+
+}
