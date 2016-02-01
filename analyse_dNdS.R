@@ -196,6 +196,9 @@ dev.off()
 # Top 75
 top <- dNdS.by.gene[ranking>max(ranking)-400 & uS>3,.(cancer.gene,uS,uN,dNdS,gene.name,ranking,expression.percent.rank)][order(-ranking)]
 
+# Save whole table
+write.table(dNdS.by.gene, paste("results/dNdS",format(Sys.time(), "%Y-%m-%d.%H-%M-%S"), "tsv", sep = "."), sep="\t",row.names=FALSE,quote=FALSE)
+
 # Export top and bottom 25 hits to tsv file
 write.table(top, paste("results/top_dNdS",format(Sys.time(), "%Y-%m-%d.%H-%M-%S"), "tsv", sep = "."), sep="\t",row.names=FALSE,quote=FALSE)
 write.table(bottom, paste("results/bottom_dNdS",format(Sys.time(), "%Y-%m-%d.%H-%M-%S"), "tsv", sep = "."), sep="\t",row.names=FALSE,quote=FALSE)
