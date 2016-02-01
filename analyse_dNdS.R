@@ -35,6 +35,7 @@ dNdS.by.gene <- unique(dNdS.by.gene[is.finite(dNdS),.(dNdS = mean(dNdS,na.rm=TRU
 
 # Still 56 genes with dNdS = 0 due to no N found
 dNdS.by.gene[,ranking:=rank(dNdS,ties.method="first")]
+dNdS.by.gene <- dNdS.by.gene[order(-ranking)]
 #19,066 genes
 
 cancer.genes <- fread("data/raw/cancer_gene_census.csv", header=TRUE)
@@ -105,8 +106,6 @@ setkey(RNAseq,gene.name)
 
 # For all rows in dNdS.by.gene, add expression from RNAseq if avaliable
 dNdS.by.gene <- RNAseq[dNdS.by.gene,]
-
-dNdS.by.gene <- dNdS.by.gene[order(ranking)]
 
 # Calculate sliding window mean of S over ranking
 slideFunct <- function(data, window, step){
