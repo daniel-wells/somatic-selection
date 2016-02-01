@@ -7,6 +7,43 @@ setkey(observed_variants, transcript.id)
 # Check number of each variant.class
 observed_variants[,.N,by=variant.class][order(-N)]
 
+# Remove exon variants
+observed_variants <- observed_variants[variant.class!="exon_variant",]
+
+# Calculate and add randomised versions of annotations
+
+randomise <- function(){
+  type <- c("synonymous_variant","missense_variant")
+  x <- as.data.frame(sample(type, nrow(observed_variants), replace=TRUE))
+  return(x)
+}
+
+# For each row randomly assign synon or missense
+# NBNBNB Need to back calculate from number of (non)synon sites - it's not counts which should happen at equal freq but rate if selection = 0!
+y <- as.data.table(replicate(10, randomise()))
+replication.names <- paste("replication",1:ncol(y),sep=".")
+setnames(y,replication.names)
+
+# Append randomised annotations to main table
+observed_variants <- cbind(observed_variants,y)
+
+# Set up table with list of transcripts
+random.counts <- as.data.table(unique(observed_variants$transcript.id))
+setnames(crandom.counts,"transcript.id")
+
+# Count total synon per transcript for each randomisation set
+for (colj in replication.names){
+	print(colj)
+	X <- observed_variants[get(colj)=="synonymous_variant",list(S=sum(donors.affected)), by=list(transcript.id)]
+	setnames(X,c("transcript.id",colj))
+	setkey(random.counts,transcript.id)
+	setkey(X,transcript.id)
+	random.counts <- merge(colvar,X, all=TRUE)
+}
+
+# In future need to get patient non aggregated so each row is an observed mutation, then just sum col==synon, then will get 0's and can more easily join lists as equal length and preserve order
+
+
 synon.count <- observed_variants[variant.class=="synonymous_variant",list(S=sum(donors.affected)), by=list(transcript.id)]
 
 nonsynon.count <- observed_variants[variant.class=="missense_variant" | variant.class=="frameshift_variant" | variant.class=="disruptive_inframe_deletion" | variant.class=="disruptive_inframe_insertion" | variant.class=="inframe_deletion" | variant.class=="inframe_insertion" | variant.class=="start_lost" | variant.class=="stop_lost", list(N=sum(donors.affected)), by=list(transcript.id)]
