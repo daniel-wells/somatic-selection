@@ -28,7 +28,6 @@ dNdS.by.gene <- cds[max.cds.by.gene,]
 setkey(dNdS.by.gene)
 
 # Calculate mean dNdS per gene to remove duplicates
-dNdS.by.gene <- unique(dNdS.by.gene[is.finite(dNdS),.(dNdS = mean(dNdS,na.rm=TRUE),gene.name,chromosome,cds_length,uS=mean(S),uN=mean(N)),by=gene])
 # dNdS.by.gene[uS<3.0000001,]
 # 1618 genes with uS<3
 # 17,448 genes left
@@ -124,7 +123,6 @@ sliding.mean.uN <- slideFunct(dNdS.by.gene$uN,100,100)
 
 sliding.mean.cds <- slideFunct(dNdS.by.gene$cds_length,100,100)
 
-dNdS.by.gene$dS <- dNdS.by.gene$uS / dNdS.by.gene$cds
 dNdS.by.gene$dN <- dNdS.by.gene$uN / dNdS.by.gene$cds
 
 sliding.mean.dS <- slideFunct(dNdS.by.gene$dS,100,100)
