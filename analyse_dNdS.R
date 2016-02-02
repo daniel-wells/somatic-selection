@@ -28,6 +28,7 @@ dNdS.by.gene <- cds[max.cds.by.gene,]
 setkey(dNdS.by.gene)
 
 # Calculate mean dNdS per gene to remove duplicates
+dNdS.by.gene <- unique(dNdS.by.gene[is.finite(dNdS),.(dNdS = mean(dNdS,na.rm=TRUE),gene.name,chromosome,cds_length,uS=mean(S),uN=mean(N),ucS=mean(synonymous_sites),ucN=mean(nonsynonymous_sites)),by=gene])
 # dNdS.by.gene[uS<3.0000001,]
 # 1618 genes with uS<3
 # 17,448 genes left
@@ -118,24 +119,21 @@ slideFunct <- function(data, window, step){
   return(result)
 }
 
-sliding.mean.uS <- slideFunct(dNdS.by.gene$uS,100,100)
-sliding.mean.uN <- slideFunct(dNdS.by.gene$uN,100,100)
+dNdS.by.gene$dS <- dNdS.by.gene$uS / dNdS.by.gene$ucS
+dNdS.by.gene$dN <- dNdS.by.gene$uN / dNdS.by.gene$ucN
 
-sliding.mean.cds <- slideFunct(dNdS.by.gene$cds_length,100,100)
-
-dNdS.by.gene$dN <- dNdS.by.gene$uN / dNdS.by.gene$cds
-
-sliding.mean.dS <- slideFunct(dNdS.by.gene$dS,100,100)
-sliding.mean.dS20 <- slideFunct(dNdS.by.gene[uS>20]$dS,37,37)
-sliding.mean.dN <- slideFunct(dNdS.by.gene$dN,100,100)
+# Re-rank after subsetting uS
+dNdS.by.gene[uS>3,ranking.1:=rank(dNdS,ties.method="first")]
+dNdS.by.gene[uS>10,ranking.2:=rank(dNdS,ties.method="first")]
+dNdS.by.gene[uS>15,ranking.3:=rank(dNdS,ties.method="first")]
+dNdS.by.gene[uS>3 & uN>3,ranking.4:=rank(dNdS,ties.method="first")]
 
 pdf(width=16, height=9, onefile = TRUE)
-plot(sliding.mean.uS,xlim=c(0,190),ylim=c(0,85),type="o")
-lines(sliding.mean.uN,type="o",col="blue")
-plot(sliding.mean.dS,type="o")
-lines(sliding.mean.dS20,type="o",col="red")
-plot(sliding.mean.dN,type="o")
-plot(sliding.mean.cds,type="o")
+ggplot(dNdS.by.gene, aes(ranking, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,0.2)
+ggplot(dNdS.by.gene, aes(ranking.1, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,0.2)
+ggplot(dNdS.by.gene, aes(ranking.4, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,0.2)
+ggplot(dNdS.by.gene, aes(ranking.2, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,0.2)
+ggplot(dNdS.by.gene, aes(ranking.3, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,0.2)
 dev.off()
 
 # Plot Graphs!
