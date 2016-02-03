@@ -25,7 +25,11 @@ all.simple.somatic.mutations[,.N,by=mutation_type]
 # all single base pair, exonic mutations
 ICGCraw <- all.simple.somatic.mutations[mutation_type=="single base substitution" & consequence_type %in% c("missense_variant", "synonymous_variant", "frameshift_variant","disruptive_inframe_deletion","disruptive_inframe_insertion","inframe_deletion","inframe_insertion","start_lost","stop_lost","stop_gained")]
 
-# Make VRanges object - NB contains duplicates!!
+# Remove duplicate annotations (1mut:>1annot)
+setkey(ICGCraw,icgc_donor_id,icgc_mutation_id)
+unique(ICGCraw)
+
+# Make VRanges object
 vr = VRanges(
 	seqnames = ICGCraw$chromosome,
 	ranges = IRanges(ICGCraw$chromosome_start,ICGCraw$chromosome_end),
