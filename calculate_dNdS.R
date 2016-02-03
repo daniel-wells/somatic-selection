@@ -9,7 +9,7 @@ observed_variants[,.N,by=variant.class][order(-N)]
 
 synon.count <- observed_variants[variant.class=="synonymous_variant",list(S=sum(donors.affected)), by=list(transcript.id)]
 
-nonsynon.count <- observed_variants[variant.class=="missense_variant" | variant.class=="frameshift_variant" | variant.class=="disruptive_inframe_deletion" | variant.class=="disruptive_inframe_insertion" | variant.class=="inframe_deletion" | variant.class=="inframe_insertion" | variant.class=="start_lost" | variant.class=="stop_lost", list(N=sum(donors.affected)), by=list(transcript.id)]
+nonsynon.count <- observed_variants[variant.class %in% c("missense_variant","frameshift_variant","disruptive_inframe_deletion","disruptive_inframe_insertion","inframe_deletion","inframe_insertion","start_lost","stop_lost","stop_gained"), list(N=sum(donors.affected)), by=list(transcript.id)]
 
 setkey(synon.count,transcript.id)
 setkey(nonsynon.count,transcript.id)
