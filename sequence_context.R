@@ -15,15 +15,15 @@ genome <- BSgenome.Hsapiens.UCSC.hg19
 file_list <- list.files(path="/mnt/lustre/users/dwells/data/raw/ICGC",pattern="simple_somatic_mutation.open.*.tsv.gz",full.names=TRUE)
 
 # Get rid of 1.4GB (zipped!) MELA mutations
-file_list <- file_list[-34] <- NULL
+file_list <- file_list[-34]
 
 all.simple.somatic.mutations <- rbindlist(lapply(paste('zcat < ',file_list[1:7]), fread))
 
 all.simple.somatic.mutations[,.N,by=project_code]
 all.simple.somatic.mutations[,.N,by=mutation_type]
 
-# all single base pair subs
-ICGCraw <- all.simple.somatic.mutations[mutation_type=="single base substitution"]
+# all single base pair, exonic mutations
+ICGCraw <- all.simple.somatic.mutations[mutation_type=="single base substitution" & consequence_type %in% c("missense_variant", "synonymous_variant", "frameshift_variant","disruptive_inframe_deletion","disruptive_inframe_insertion","inframe_deletion","inframe_insertion","start_lost","stop_lost","stop_gained")]
 
 # Make VRanges object - NB contains duplicates!!
 vr = VRanges(
