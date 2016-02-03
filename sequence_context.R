@@ -35,8 +35,7 @@ vr = VRanges(
 	study = ICGCraw$project_code)
 
 # add "chr" to work with UCSC.hg19
-seqlevels(vr, force=TRUE) <- c(1:22, "X", "Y")  # restrict
-seqlevels(vr) <- paste0("chr", seqlevels(vr))  # rename
+ucsc(vr)
 
 ## Annotate variants with context
 vr_context <- mutationContext(vr, genome)
