@@ -27,7 +27,7 @@ ICGCraw <- all.simple.somatic.mutations[mutation_type=="single base substitution
 
 # Remove duplicate annotations (1mut:>1annot)
 setkey(ICGCraw,icgc_donor_id,icgc_mutation_id)
-unique(ICGCraw)
+ICGCraw <- unique(ICGCraw)
 
 # Make VRanges object
 vr = VRanges(
@@ -39,7 +39,7 @@ vr = VRanges(
 	study = ICGCraw$project_code)
 
 # add "chr" to work with UCSC.hg19
-ucsc(vr)
+vr <- ucsc(vr)
 
 ## Annotate variants with context
 vr_context <- mutationContext(vr, genome)
