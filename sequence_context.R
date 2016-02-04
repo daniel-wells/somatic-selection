@@ -3,6 +3,7 @@
 # biocLite("VariantAnnotation")
 # biocLite("BSgenome")
 # biocLite("BSgenome.Hsapiens.UCSC.hg19")
+# biocLite("TxDb.Hsapiens.UCSC.hg19.knownGene")
 
 library(SomaticSignatures)
 library(data.table)
@@ -10,6 +11,30 @@ library(data.table)
 ## Genomic sequences
 library(BSgenome.Hsapiens.UCSC.hg19)
 genome <- BSgenome.Hsapiens.UCSC.hg19
+
+# Extract trinucleotide frequency
+library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+cds = keepStandardChromosomes(reduce(cds(TxDb.Hsapiens.UCSC.hg19.knownGene)))
+sum(width(cds)) # 35,226,001 - 35MB
+
+k = 3
+n = 1e6
+k3_cds = kmerFrequency(genome, n, k, cds)
+
+# Modified from SomaticSignatures/R/normalize.R
+s = BStringSet(rownames(sca_mm))
+base_motif = subseq(s, 4, 6)
+subseq(base_motif, 2, 2) = subseq(s, 1, 1)
+bs = as(base_motif, "character")
+all(bs %in% names(k3_exons))
+names(k3_exons[!names(k3_exons) %in% bs])
+unique(bs) #32!
+idx = match(bs, names(k3_cds))
+# Modified here *2 so total frequency is 3 (as only 6/12 trinucleotides represented in mutation profile, and each is represented 3 times to make 96)
+sss = 2 * as.vector(k3_cds[idx])
+sum(sss) # =3
+trimer.counts = unique(sss * 35226001)
+names(trimer.counts) <- unique(bs)
 
 # Load somatic mutation tsv
 file_list <- list.files(path="/mnt/lustre/users/dwells/data/raw/ICGC",pattern="simple_somatic_mutation.open.*.tsv.gz",full.names=TRUE)
