@@ -12,29 +12,6 @@ library(data.table)
 library(BSgenome.Hsapiens.UCSC.hg19)
 genome <- BSgenome.Hsapiens.UCSC.hg19
 
-# Extract trinucleotide frequency
-library(TxDb.Hsapiens.UCSC.hg19.knownGene)
-cds = keepStandardChromosomes(reduce(cds(TxDb.Hsapiens.UCSC.hg19.knownGene)))
-sum(width(cds)) # 35,226,001 - 35MB
-
-k = 3
-n = 1e6
-k3_cds = kmerFrequency(genome, n, k, cds)
-
-# Modified from SomaticSignatures/R/normalize.R
-s = BStringSet(rownames(sca_mm))
-base_motif = subseq(s, 4, 6)
-subseq(base_motif, 2, 2) = subseq(s, 1, 1)
-bs = as(base_motif, "character")
-all(bs %in% names(k3_exons))
-names(k3_exons[!names(k3_exons) %in% bs])
-unique(bs) #32!
-idx = match(bs, names(k3_cds))
-# Modified here *2 so total frequency is 3 (as only 6/12 trinucleotides represented in mutation profile, and each is represented 3 times to make 96)
-sss = 2 * as.vector(k3_cds[idx])
-sum(sss) # =3
-trimer.counts = unique(sss * 35226001)
-names(trimer.counts) <- unique(bs)
 
 # Load somatic mutation tsv
 file_list <- list.files(path="/mnt/lustre/users/dwells/data/raw/ICGC",pattern="simple_somatic_mutation.open.*.tsv.gz",full.names=TRUE)
@@ -79,20 +56,39 @@ vr <- ucsc(vr)
 ## Annotate variants with context
 vr_context <- mutationContext(vr, genome)
 
-# for 1,191,475 variants
-# user  system elapsed
-# 6.637   7.223  15.405
+motif.matrix.count = motifMatrix(vr_context, group = "study", normalize = FALSE)
 
-# Way too slow ~4.5hrs
-# RefGenome = FaFile("/mnt/lustre/data/GRCH37/GRCH37.fasta")
-# ptm <- proc.time()
-# vr_context = mutationContext(head(vr,n=100), RefGenome)
-# proc.time() - ptm
+if (file.exists("data/coding.trimer.counts.rds")){
+	coding.trimer.counts2 <- readRDS("data/coding.trimer.counts.rds")
+}else{
+	# Extract trinucleotide frequency
+	library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+	cds = keepStandardChromosomes(reduce(cds(TxDb.Hsapiens.UCSC.hg19.knownGene)))
+
+	k = 3
+	n = 1e6
+	k3_cds = kmerFrequency(genome, n, k, cds)
+
+	# Modified from SomaticSignatures/R/normalize.R
+	s = BStringSet(rownames(motif.matrix.count))
+	base_motif = subseq(s, 4, 6)
+	subseq(base_motif, 2, 2) = subseq(s, 1, 1)
+	bs = as(base_motif, "character")
+	all(bs %in% names(k3_cds))
+	names(k3_cds[!names(k3_cds) %in% bs])
+	unique(bs) #32!
+	idx = match(bs, names(k3_cds))
+	# Modified here *2 so total frequency is 3 (as only 6/12 trinucleotides represented in mutation profile, and each is represented 3 times to make 96)
+	sss = 2 * as.vector(k3_cds[idx])
+	sum(sss) # =3
+	coding.trimer.counts = unique(sss * sum(width(cds)))  # 35,226,001 - 35Mbp coding exome length
+	names(coding.trimer.counts) <- unique(bs)
+	saveRDS(coding.trimer.counts, "data/coding.trimer.counts.rds")	
+}
+
 # number of donors per project
 donor.count <- ICGCraw[,.(count=length(icgc_donor_id)),by=project_code][order(count)]
 
-motif.matrix.freq = motifMatrix(vr_context, group = "study", normalize = TRUE)
-motif.matrix.count = motifMatrix(vr_context, group = "study", normalize = FALSE)
 
 plotMutationSpectrum(vr_context, "study")
 dev.off()
