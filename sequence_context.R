@@ -91,8 +91,39 @@ if (file.exists("data/coding.trimer.counts.rds")){
 }
 
 # number of donors per project
-donor.count <- ICGCraw[,.(count=length(icgc_donor_id)),by=project_code][order(count)]
+donor.count <- ICGCraw[,.(donor.count=length(icgc_donor_id)),by=project_code][order(donor.count)]
 
+CJ.dt = function(X,Y) {
+  stopifnot(is.data.table(X),is.data.table(Y))
+  k = NULL
+  X = X[, c(k=1, .SD)]
+  setkey(X, k)
+  Y = Y[, c(k=1, .SD)]
+  setkey(Y, NULL)
+  X[Y, allow.cartesian=TRUE][, k := NULL][]
+}
+
+
+# Convert coding.trimer.counts to data table and cross join with donor counts
+trimer.count.by.project <- CJ.dt(data.table("base_motif"=names(coding.trimer.counts),coding.trimer.counts),donor.count)
+# overall counts of trinucleotides over all donors in a project
+trimer.count.by.project$total.count <- trimer.count.by.project$coding.trimer.counts * trimer.count.by.project$donor.count
+
+
+# Convert mutation motif counts to data table
+motif.probabilities <- as.data.table(melt(motif.matrix.count))
+setnames(motif.probabilities,c("mutation","project_code","mutation_count"))
+# add base motif column
+motif.probabilities$mutation <- as.character(motif.probabilities$mutation)
+motif.probabilities$base_motif <- subseq(motif.probabilities$mutation, 4, 6)
+subseq(motif.probabilities$base_motif, 2, 2) <- subseq(motif.probabilities$mutation, 1, 1)
+
+# all rows in motif matrix with timer counts added
+setkey(trimer.count.by.project,project_code,base_motif)
+setkey(motif.probabilities,project_code,base_motif)
+motif.probabilities <- trimer.count.by.project[motif.probabilities]
+# Calculate mutation "probability"
+motif.probabilities$mutation.probability <- motif.probabilities$mutation_count / motif.probabilities$total.count
 
 plotMutationSpectrum(vr_context, "study")
 dev.off()
