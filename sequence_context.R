@@ -39,20 +39,28 @@ names(trimer.counts) <- unique(bs)
 # Load somatic mutation tsv
 file_list <- list.files(path="/mnt/lustre/users/dwells/data/raw/ICGC",pattern="simple_somatic_mutation.open.*.tsv.gz",full.names=TRUE)
 
-# Get rid of 1.4GB (zipped!) MELA mutations
-file_list <- file_list[-34]
+# Filter as soon as reading or will take up too much memory (>64GB), MELA-AU alone is 34GB unzipped
+read.and.filter <- function(x) {
+	print(paste("Reading file:",x))
+	data <- fread(x)
+	# all single base pair, exonic mutations
+	data <- data[mutation_type=="single base substitution" & consequence_type %in% c("missense_variant", "synonymous_variant", "frameshift_variant","disruptive_inframe_deletion","disruptive_inframe_insertion","inframe_deletion","inframe_insertion","start_lost","stop_lost","stop_gained")]
+	return(data)
+}
 
-all.simple.somatic.mutations <- rbindlist(lapply(paste('zcat < ',file_list[1:7]), fread))
+# Load tsv mutations
+single.base.coding.substitutions <- rbindlist(lapply(paste('zcat < ',file_list), read.and.filter))
 
-all.simple.somatic.mutations[,.N,by=project_code]
-all.simple.somatic.mutations[,.N,by=mutation_type]
+# Save object
+saveRDS(single.base.coding.substitutions, "data/single.base.coding.substitutions.rds")
 
-# all single base pair, exonic mutations
-ICGCraw <- all.simple.somatic.mutations[mutation_type=="single base substitution" & consequence_type %in% c("missense_variant", "synonymous_variant", "frameshift_variant","disruptive_inframe_deletion","disruptive_inframe_insertion","inframe_deletion","inframe_insertion","start_lost","stop_lost","stop_gained")]
+single.base.coding.substitutions[,.N,by=project_code]
+single.base.coding.substitutions[,.N,by=mutation_type]
+single.base.coding.substitutions[,.N,by=consequence_type]
 
-# Remove duplicate annotations (1mut:>1annot)
-setkey(ICGCraw,icgc_donor_id,icgc_mutation_id)
-ICGCraw <- unique(ICGCraw)
+# Remove duplicate annotations (1mut:>1annot due to multiple transcripts)
+setkey(single.base.coding.substitutions,icgc_donor_id,icgc_mutation_id)
+ICGCraw <- unique(single.base.coding.substitutions)
 
 # Make VRanges object
 vr = VRanges(
