@@ -57,6 +57,7 @@ saveRDS(single.base.coding.substitutions, "data/single.base.coding.substitutions
 single.base.coding.substitutions[,.N,by=project_code]
 single.base.coding.substitutions[,.N,by=mutation_type]
 single.base.coding.substitutions[,.N,by=consequence_type]
+single.base.coding.substitutions[,.N,by=sequencing_strategy]
 
 # Remove duplicate annotations (1mut:>1annot due to multiple transcripts)
 setkey(single.base.coding.substitutions,icgc_donor_id,icgc_mutation_id)
@@ -69,7 +70,8 @@ vr = VRanges(
 	ref = ICGCraw$reference_genome_allele,
 	alt = ICGCraw$mutated_to_allele,
 	sampleNames = ICGCraw$icgc_donor_id,
-	study = ICGCraw$project_code)
+	study = ICGCraw$project_code,
+	sequencing_strategy = ICGCraw$sequencing_strategy)
 
 # add "chr" to work with UCSC.hg19
 vr <- ucsc(vr)
