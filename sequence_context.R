@@ -88,6 +88,8 @@ vr_context <- mutationContext(vr, genome)
 # ptm <- proc.time()
 # vr_context = mutationContext(head(vr,n=100), RefGenome)
 # proc.time() - ptm
+# number of donors per project
+donor.count <- ICGCraw[,.(count=length(icgc_donor_id)),by=project_code][order(count)]
 
 motif.matrix.freq = motifMatrix(vr_context, group = "study", normalize = TRUE)
 motif.matrix.count = motifMatrix(vr_context, group = "study", normalize = FALSE)
