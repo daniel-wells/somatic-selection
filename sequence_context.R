@@ -12,24 +12,28 @@ library(data.table)
 library(BSgenome.Hsapiens.UCSC.hg19)
 genome <- BSgenome.Hsapiens.UCSC.hg19
 
+if (file.exists("data/single.base.coding.substitutions.rds")){
+	single.base.coding.substitutions <- readRDS("data/single.base.coding.substitutions.rds")
+}else{
 
-# Load somatic mutation tsv
-file_list <- list.files(path="/mnt/lustre/users/dwells/data/raw/ICGC",pattern="simple_somatic_mutation.open.*.tsv.gz",full.names=TRUE)
+	# Load somatic mutation tsv
+	file_list <- list.files(path="/mnt/lustre/users/dwells/data/raw/ICGC",pattern="simple_somatic_mutation.open.*.tsv.gz",full.names=TRUE)
 
-# Filter as soon as reading or will take up too much memory (>64GB), MELA-AU alone is 34GB unzipped
-read.and.filter <- function(x) {
+	# Filter as soon as reading or will take up too much memory (>64GB), MELA-AU alone is 34GB unzipped
+	read.and.filter <- function(x) {
 	print(paste("Reading file:",x))
 	data <- fread(x)
 	# all single base pair, exonic mutations
 	data <- data[mutation_type=="single base substitution" & consequence_type %in% c("missense_variant", "synonymous_variant", "frameshift_variant","disruptive_inframe_deletion","disruptive_inframe_insertion","inframe_deletion","inframe_insertion","start_lost","stop_lost","stop_gained")]
 	return(data)
+	}
+
+	# Load tsv mutations
+	single.base.coding.substitutions <- rbindlist(lapply(paste('zcat < ',file_list), read.and.filter))
+
+	# Save object
+	saveRDS(single.base.coding.substitutions, "data/single.base.coding.substitutions.rds")
 }
-
-# Load tsv mutations
-single.base.coding.substitutions <- rbindlist(lapply(paste('zcat < ',file_list), read.and.filter))
-
-# Save object
-saveRDS(single.base.coding.substitutions, "data/single.base.coding.substitutions.rds")
 
 single.base.coding.substitutions[,.N,by=project_code]
 single.base.coding.substitutions[,.N,by=mutation_type]
