@@ -1,0 +1,179 @@
+library("Biostrings")
+library(data.table)
+
+motif.probabilities <- readRDS("data/motif.probabilities.rds")
+
+genetic.code <- c("TTT"="F", "TTC"="F", "TTA"="L", "TTG"="L",
+       "TCT"="S", "TCC"="S", "TCA"="S", "TCG"="S",
+       "TAT"="Y", "TAC"="Y", "TAA"="STOP", "TAG"="STOP",
+       "TGT"="C", "TGC"="C", "TGA"="STOP", "TGG"="W",
+       "CTT"="L", "CTC"="L", "CTA"="L", "CTG"="L",
+       "CCT"="P", "CCC"="P", "CCA"="P", "CCG"="P",
+       "CAT"="H", "CAC"="H", "CAA"="Q", "CAG"="Q",
+       "CGT"="R", "CGC"="R", "CGA"="R", "CGG"="R",
+       "ATT"="I", "ATC"="I", "ATA"="I", "ATG"="M",
+       "ACT"="T", "ACC"="T", "ACA"="T", "ACG"="T",
+       "AAT"="N", "AAC"="N", "AAA"="K", "AAG"="K",
+       "AGT"="S", "AGC"="S", "AGA"="R", "AGG"="R",
+       "GTT"="V", "GTC"="V", "GTA"="V", "GTG"="V",
+       "GCT"="A", "GCC"="A", "GCA"="A", "GCG"="A",
+       "GAT"="D", "GAC"="D", "GAA"="E", "GAG"="E",
+       "GGT"="G", "GGC"="G", "GGA"="G", "GGG"="G")
+
+is.nonsynon <- function(codon1,codon2) {genetic.code[codon1] != genetic.code[codon2]}
+
+
+# All possible 5mers
+letters = c("A","T","G","C")
+five.mers <- do.call(paste, c(expand.grid(letters, letters, letters, letters, letters), list(sep='')))
+stopifnot(length(five.mers) == 1024)
+
+
+calculate.fivemer.probability <- function(){
+fivemer.probability.calc = data.table()
+for (fivemer in (five.mers)){
+
+fivemer.probability = 0
+fivemer.probability.dt <- data.table()
+
+for (codon.position in (2:4)){
+
+	purine = FALSE
+	
+	# Get original trinucleotide in context for counting
+	if (substr(fivemer, codon.position, codon.position) %in% c("G","A")){
+		purine = TRUE
+		original.trinucleotide = toString(reverseComplement(subseq(DNAString(fivemer), start=codon.position-1, end=codon.position+1)))
+	} else {original.trinucleotide = substr(fivemer,codon.position-1,codon.position+1)}
+
+codon.probability = 0
+
+	#
+	for (new.nt in letters[letters != substr(fivemer, codon.position, codon.position)]){		
+		# Substitute new letter in codon.position
+		m.fivemer <- fivemer
+		substr(m.fivemer, codon.position, codon.position) <- new.nt
+
+
+		# check if mutation is nonsynon or synon
+		nonsynon = is.nonsynon(substr(m.fivemer,2,4),substr(fivemer,2,4))
+		synon = 1 - nonsynon
+		
+		# Get mutation in context for counting
+		if (purine == TRUE){
+			new.trinucleotide = toString(reverseComplement(subseq(DNAString(m.fivemer), start=codon.position-1, end=codon.position+1)))
+		} else{new.trinucleotide = substr(m.fivemer,codon.position-1,codon.position+1)}
+
+
+		# Double check mutated base is referenced as pyrimidine
+		stopifnot(substr(original.trinucleotide,2,2) %in% c("C","T"))
+		
+		# Format mutation as NN N.N
+		mutation.in.context = paste(substr(original.trinucleotide,2,2),substr(new.trinucleotide,2,2)," ",substr(original.trinucleotide,1,1),".",substr(original.trinucleotide,3,3),sep='')
+		
+		codon.probability = 0
+		# Outer product -> two lists
+		codon.probability <- motif.probabilities[mutation==mutation.in.context,mutation.probability] %o% c("nonsynon.prob"=nonsynon,"synon.prob"=synon)
+		
+		# For each site and letter add up probabilities
+		fivemer.probability <- fivemer.probability + codon.probability
+		} # each letter
+
+		} # each codon.position
+		
+		# Convert to data table to join
+		fivemer.probability.dt <- data.table(fivemer.probability)
+		fivemer.probability.dt$project_code <- motif.probabilities[mutation==mutation.in.context,project_code]
+		fivemer.probability.dt$fivemer <- fivemer
+
+	  
+		# Add next fivemer set
+	  fivemer.probability.calc <-  rbindlist(list(fivemer.probability.calc,fivemer.probability.dt))
+
+	print(fivemer)
+} # each fivemer
+return(fivemer.probability.calc)
+} # close function
+
+fivemer.probabilities <- calculate.fivemer.probability()
+# for some reason TAA is added to end of first two column names
+names(fivemer.probabilities) <- c("nonsynon.prob","synon.prob","project_code","fivemer")
+
+# # All (changing) single nt substitutions in codon
+# point.mutate <- function(codon){
+# codon.mutations = c()
+# 	for (i in (1:3)){
+# 		ncodon = codon
+# 		for (letter in letters[letters != substr(codon, i, i)]){
+# 			substr(ncodon, i, i) <- letter
+# 			codon.mutations<-c(codon.mutations,ncodon)
+# 			}
+# 		}
+# stopifnot(length(codon.mutations) == 9)
+# return(codon.mutations)
+# }
+#
+# mutations <- point.mutate(codon)
+# 	for (mutated in mutations){
+# 		reverseComplement(DNAString(codon))
+# 		mutation.in.context
+# 		is.nonsynon(mutated,codon) * motif.matrix.count[mutation.in.context,study] / ( trimer.counts[codon.complement] * donor.number[study] )
+#  	}
+# }
+
+print("Reading in reference genome")
+fasta <- readDNAStringSet("/mnt/lustre/users/dwells/data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz")
+
+# Which sequences are not multiple of 3
+multiple.of.3 <- width(fasta) %% 3L == 0L
+# Which sequences are not ACTG only
+clean.alphabet <- alphabetFrequency(fasta, baseOnly=TRUE)[,'other'] == 0
+
+# Remove uncalculatable sequences (104,763 - 20,870 = 83,893 left)
+fasta <- fasta[multiple.of.3 & clean.alphabet]
+
+# Sum over all projects
+fivemer.probabilities.sum <- fivemer.probabilities[,.(nonsynon.probability=sum(nonsynon.prob),synon.probability=sum(synon.prob)),by=fivemer]
+setkey(fivemer.probabilities.sum,fivemer)
+
+count.nonsynon <- function(x) {
+# add N to start and beginning
+n <- DNAString("NN")
+subseq(n, start=2, end=1) <- x
+
+# overlapping 5mers with codons in centre
+views <- Views(n, start=seq(1,length(n)-3,3), width=5)
+
+#SLOW
+view.chr <- data.table(fivemer=as.character(views))
+setkey(view.chr,fivemer)
+
+# Sum always returns two NA values due to first and last fivemer having N at start/beginning
+return(c(colSums(fivemer.probabilities.sum[view.chr][,.(nonsynon.probability,synon.probability)],na.rm=TRUE),"cds.length"=length(x)))
+
+}
+
+print("Summing values per fivemer")
+nonsynon.count <- vapply(fasta,count.nonsynon,FUN.VALUE=numeric(3))
+#system.time("") 11.5second -> 16mins
+
+print("Tidying and saving data")
+# Convert matrix to data table
+nonsynon.count.dt <- data.table(t(nonsynon.count))
+# Add back attributes
+nonsynon.count.dt$attributes <- attributes(t(nonsynon.count))$dimnames[[1]]
+# Split attributes
+nonsynon.count.dt[, c("transcript.id","cds.type","chromosome","gene.id","gene.biotype","transcript.biotype") := tstrsplit(attributes, " ", fixed=TRUE)]
+# remove old attributes
+nonsynon.count.dt$attributes <- NULL
+
+# Remove variable names from entries
+cnames <- names(nonsynon.count.dt)[4:9]
+nonsynon.count.dt[, cnames := lapply(nonsynon.count.dt[,cnames,with=FALSE],function(x){gsub("[a-z]+_?[a-z]+:", "",x)}),with=FALSE]
+
+# Split variant location field
+nonsynon.count.dt[, c("reference.genome","chromosome","chromosome.start","chromosome.stop","strand") := tstrsplit(chromosome, ":", fixed=TRUE)]
+
+# Save
+write.table(nonsynon.count.dt, "data/expected_variants_per_transcript.tsv", sep="\t",row.names=FALSE,quote=FALSE)
+saveRDS(nonsynon.count.dt, "data/expected_variants_per_transcript.rds")
