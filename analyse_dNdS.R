@@ -165,8 +165,8 @@ ggplot(dNdS.by.gene[uS>3], aes(dNdS)) + geom_histogram(binwidth = 0.01) + geom_v
 
 # Fit data to students-t and normal dist
 library(MASS)
-paramst <- as.list(MASS::fitdistr(dNdS.by.gene$Log.dNdS, "t")$estimate)
-paramsn <- as.list(MASS::fitdistr(dNdS.by.gene$Log.dNdS, "normal")$estimate)
+paramst <- as.list(MASS::fitdistr(dNdS.by.gene[is.finite(Log.dNdS),Log.dNdS], "t")$estimate)
+paramsn <- as.list(MASS::fitdistr(dNdS.by.gene[is.finite(Log.dNdS),Log.dNdS], "normal")$estimate)
 
 # QQ plot t dist
 ggplot(dNdS.by.gene, aes(sample = Log.dNdS)) + stat_qq(distribution = qt, dparams = paramst["df"])+ labs(title="QQ plot, students-t distribution")
