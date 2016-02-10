@@ -34,7 +34,7 @@ counts$S[is.na(counts$S)] <- 0
 transcript.gene <- unique(observed_variants[variant.class!="exon_variant",gene.name, by=transcript.id])
 setkey(transcript.gene, transcript.id)
 
-# All rows in transcript.gene + rows that match from counts - should have equal length 81,216
+# All rows in transcript.gene + rows that match from counts - should have equal length 81,312
 named.counts <- counts[transcript.gene,]
 setkey(named.counts, transcript.id)
 
@@ -48,17 +48,16 @@ setkey(updated.annotations, "Ensembl.Transcript.ID")
 
 # All rows in expected_variants + any rows from updated.annotations which match
 expected_variants <- updated.annotations[expected_variants,]
-# length = 72,127
+# length = 72,127 _OLD
 
 # Remove non protein coding transcripts
 expected_variants <- expected_variants[Transcript.type=="protein_coding" | is.na(Transcript.type),]
-# 71,147, 980 removed
+# 71,147, 980 removed _OLD
 
 # All rows in named.counts with rows from expected_variants which match
 expected_variants <- expected_variants[named.counts,nomatch=0]
 # some transcripts with observed variations do not have calculated nonsynon sites due to N or not multiple of 3, generating NA in e.g. chromosome column as these transcripts were not passed through to N per transcript. Inner Join
-# 63,747
-
+# 63,782
 
 # Calculate dNdS
 expected_variants$dS <- expected_variants$S / expected_variants$synon.probability
