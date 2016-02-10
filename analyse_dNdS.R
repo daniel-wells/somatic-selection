@@ -135,17 +135,24 @@ dNdS.by.gene[uS>10,ranking.2:=rank(dNdS,ties.method="first")]
 dNdS.by.gene[uS>15,ranking.3:=rank(dNdS,ties.method="first")]
 dNdS.by.gene[uS>3 & uN>3,ranking.4:=rank(dNdS,ties.method="first")]
 
-pdf(width=16, height=9, onefile = TRUE)
-ggplot(dNdS.by.gene, aes(ranking, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,0.2)
-ggplot(dNdS.by.gene, aes(ranking.1, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,0.2)
-ggplot(dNdS.by.gene, aes(ranking.4, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,0.2)
-ggplot(dNdS.by.gene, aes(ranking.2, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,0.2)
-ggplot(dNdS.by.gene, aes(ranking.3, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,0.2)
-dev.off()
+
 
 # Plot Graphs!
 library(ggplot2)
 library(ggrepel)
+
+
+
+pdf(width=16, height=9, onefile = TRUE)
+ggplot(dNdS.by.gene, aes(ranking, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,110000)
+ggplot(dNdS.by.gene, aes(ranking.1, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,110000)
+ggplot(dNdS.by.gene, aes(ranking.4, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,110000)
+ggplot(dNdS.by.gene, aes(ranking.2, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,110000)
+ggplot(dNdS.by.gene, aes(ranking.3, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,110000)
+dev.off()
+
+
+
 pdf(paste("results/results",format(Sys.time(), "%Y-%m-%d.%H-%M-%S"), "pdf", sep = "."), width=16, height=9, onefile = TRUE)
 
 # S Histogram (Background mutation rate power)
