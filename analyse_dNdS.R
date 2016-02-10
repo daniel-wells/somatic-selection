@@ -130,24 +130,24 @@ dNdS.by.gene[uS>3 & uN>3,ranking.4:=rank(dNdS,ties.method="first")]
 library(ggplot2)
 library(ggrepel)
 
-
-
-pdf(width=16, height=9, onefile = TRUE)
-ggplot(dNdS.by.gene, aes(ranking, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,110000)
-ggplot(dNdS.by.gene, aes(ranking.1, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,110000)
-ggplot(dNdS.by.gene, aes(ranking.4, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,110000)
-ggplot(dNdS.by.gene, aes(ranking.2, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,110000)
-ggplot(dNdS.by.gene, aes(ranking.3, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,110000)
-dev.off()
-
-
-
 pdf(paste("results/results",format(Sys.time(), "%Y-%m-%d.%H-%M-%S"), "pdf", sep = "."), width=16, height=9, onefile = TRUE)
 
 # S Histogram (Background mutation rate power)
 ggplot(dNdS.by.gene, aes(uS)) + geom_histogram(binwidth = 1) + scale_x_continuous(limits = c(0, 100)) + labs(x="mean synonymous mutations per gene",title="Distribution of S per gene")
 
+# N Histogram (Background mutation rate power)
 ggplot(dNdS.by.gene, aes(uN)) + geom_histogram(binwidth = 1) + scale_x_continuous(limits = c(0, 100)) + labs(x="mean nonsynonymous mutations per gene",title="Distribution of N per gene")
+
+# Graphs of dS by ranking
+ggplot(dNdS.by.gene, aes(ranking, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,110000) + labs(title="dS by ranking for all genes") + annotate("text", x = 1000, y=0, label = paste(nrow(dNdS.by.gene[is.na(ranking)==FALSE]),"genes"))
+
+ggplot(dNdS.by.gene, aes(ranking.1, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,110000) + labs(title="dS by ranking for uS>3") + annotate("text", x = 1000, y=0, label = paste(nrow(dNdS.by.gene[is.na(ranking.1)==FALSE]),"genes"))
+
+ggplot(dNdS.by.gene, aes(ranking.4, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,110000) + labs(title="dS by ranking for uS>3 & uN>3") + annotate("text", x = 1000, y=0, label = paste(nrow(dNdS.by.gene[is.na(ranking.4)==FALSE]),"genes"))
+
+ggplot(dNdS.by.gene, aes(ranking.2, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,110000) + labs(title="dS by ranking for uS>10") + annotate("text", x = 1000, y=0, label = paste(nrow(dNdS.by.gene[is.na(ranking.2)==FALSE]),"genes"))
+
+ggplot(dNdS.by.gene, aes(ranking.3, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,110000) + labs(title="dS by ranking for uS>15") + annotate("text", x = 1000, y=0, label = paste(nrow(dNdS.by.gene[is.na(ranking.3)==FALSE]),"genes"))
 
 # Overall Dist
 ggplot(dNdS.by.gene[uS>3], aes(dNdS)) + geom_histogram(binwidth = 0.01) + geom_vline(xintercept = 1,color = "red") + theme_grey(base_size = 30) + labs(x="mean dN/dS per gene",title="Overall dN/dS Distribution") + scale_x_log10()
