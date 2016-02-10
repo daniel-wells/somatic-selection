@@ -187,7 +187,7 @@ ggplot(dNdS.by.gene[uS>3], aes(x=dNdS,fill=cancer.gene.vogelstein)) + geom_densi
 ggplot(dNdS.by.gene[uS>3], aes(x=dNdS,fill=classification)) + geom_density(alpha=0.3) + geom_vline(xintercept = 1,color = "red") + theme_grey(base_size = 30) + labs(x="mean dN/dS per gene",title="Distribution of known cancer genes") + scale_x_log10() + theme(legend.position="bottom")
 
 # Ranked points graph (sideways S)
-ggplot(dNdS.by.gene[uS>3], aes(x=ranking,y=dNdS)) + geom_point(aes(colour = cancer.gene),alpha=0.3,shape=21,size=0.5)  + geom_hline(yintercept = 1,color = "red") + scale_y_log10() + xlim(-700,20000)+ theme_grey(base_size = 10) +  geom_text_repel(data = subset(dNdS.by.gene[uS>3], dNdS>3.25 | dNdS<0.085), aes(label = gene.name), size = 2, box.padding = unit(0.5, "lines"), point.padding = unit(0.1, "lines"), force=1,segment.size=0.2) + scale_colour_manual(name="In COSMIC cancer gene census?",  values =c("black", "red")) + labs(y="mean dN/dS per gene",title="Overall Distribution") + theme(legend.position="bottom")  
+ggplot(dNdS.by.gene[uS>3], aes(x=ranking,y=dNdS)) + geom_point(aes(colour = cancer.gene),alpha=0.3,shape=21,size=0.5)  + geom_hline(yintercept = 1,color = "red") + scale_y_log10() + xlim(-700,20000)+ theme_grey(base_size = 10) +  geom_text_repel(data = subset(dNdS.by.gene[uS>3], dNdS>4.25 | dNdS<0.12), aes(label = gene.name), size = 2, box.padding = unit(0.5, "lines"), point.padding = unit(0.1, "lines"), force=1,segment.size=0.2) + scale_colour_manual(name="In COSMIC cancer gene census?",  values =c("black", "red")) + labs(y="mean dN/dS per gene",title="Overall Distribution") + theme(legend.position="bottom")  
 
 
 # Bottom 25
