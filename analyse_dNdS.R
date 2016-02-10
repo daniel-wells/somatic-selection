@@ -1,3 +1,7 @@
+# Start writing to an output file
+logfile <- file("results/analyse_dNdS.log.txt")
+sink(logfile)
+sink(logfile, type="message")
 # module load apps/R/3.2.2/gcc-4.4.7+lapack-3.5.0+blas-20110419
 
 # Using http mirror london
@@ -200,3 +204,6 @@ write.table(bottom, paste("results/bottom_dNdS",format(Sys.time(), "%Y-%m-%d.%H-
 write.table(USP17L, paste("results/USP17L",format(Sys.time(), "%Y-%m-%d.%H-%M-%S"), "tsv", sep = "."), sep="\t",row.names=FALSE,quote=FALSE)
 
 sessionInfo()
+
+sink(type="message")
+sink()
