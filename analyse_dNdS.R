@@ -114,17 +114,6 @@ setkey(RNAseq,gene.name)
 # For all rows in dNdS.by.gene, add expression from RNAseq if avaliable
 dNdS.by.gene <- RNAseq[dNdS.by.gene,]
 
-# Calculate sliding window mean of S over ranking
-slideFunct <- function(data, window, step){
-  total <- length(data)
-  window = total / 200
-  spots <- seq(from = 1, to = (total - window + 1), by = step)
-  result <- vector(length = length(spots))
-  for(i in 1:length(spots)){
-    result[i] <- mean(data[spots[i]:(spots[i] + window - 1)])
-  }
-  return(result)
-}
 
 dNdS.by.gene$dS <- dNdS.by.gene$uS / dNdS.by.gene$ucS
 dNdS.by.gene$dN <- dNdS.by.gene$uN / dNdS.by.gene$ucN
