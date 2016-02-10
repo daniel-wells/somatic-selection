@@ -39,8 +39,8 @@ named.counts <- counts[transcript.gene,]
 setkey(named.counts, transcript.id)
 
 
-expected_variants <- fread("data/nonsynonymous_sites_per_transcript_clean.tsv", header=TRUE)
-setkey(expected_variants, transcript)
+expected_variants <- fread("data/expected_variants_per_transcript.tsv", header=TRUE)
+setkey(expected_variants, transcript.id)
 
 updated.annotations <- fread(input = 'zcat < data/raw/mart_export.txt.gz')
 setnames(updated.annotations, make.names(names(updated.annotations)))
@@ -59,18 +59,21 @@ expected_variants <- expected_variants[named.counts,nomatch=0]
 # some transcripts with observed variations do not have calculated nonsynon sites due to N or not multiple of 3, generating NA in e.g. chromosome column as these transcripts were not passed through to N per transcript. Inner Join
 # 63,747
 
-# Calculate synonymous sites
-expected_variants$synonymous_sites <- expected_variants$cds_length - expected_variants$nonsynonymous_sites
 
 # Calculate dNdS
-expected_variants$dNdS <- (expected_variants$N/expected_variants$nonsynonymous_sites)/(expected_variants$S/expected_variants$synonymous_sites)
+expected_variants$dS <- expected_variants$S / expected_variants$synon.probability
+expected_variants$dN <- expected_variants$N / expected_variants$nonsynon.probability
+expected_variants$dNdS <- expected_variants$dN / expected_variants$dS
 
 # for 208 transcripts expected_variants[is.na(N), generating a dNdS of 0
 # for 1931 transcripts S==NA, generating a dNdS of Inf
 # No rows have both N and S ==0
 
-# Remove dNdS NA rows
-expected_variants <- expected_variants[is.na(dNdS)==FALSE,]
-#61608 cds
+expected_variants[is.finite(dNdS)==FALSE]
+# 1933
 
-write.table(expected_variants, "data/dNdS_by_transcript.tsv", sep="\t",row.names=FALSE,quote=FALSE)
+# Remove dNdS NA, NaN and Infinite rows
+expected_variants <- expected_variants[is.na(dNdS)==FALSE & is.finite(dNdS)==TRUE,]
+#61849 cds
+
+write.table(expected_variants,paste("data/dNdS_by_transcript",format(Sys.time(), "%Y-%m-%d.%H-%M-%S"), "tsv", sep = ".") , sep="\t",row.names=FALSE,quote=FALSE)
