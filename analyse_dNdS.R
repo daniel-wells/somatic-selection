@@ -1,5 +1,5 @@
 # Start writing to an output file
-logfile <- file("results/analyse_dNdS.log.txt")
+logfile <- file(paste("results/analyse_dNdS.log",format(Sys.time(), "%Y-%m-%d.%H-%M-%S"), "txt", sep = "."))
 sink(logfile)
 sink(logfile, type="message")
 # module load apps/R/3.2.2/gcc-4.4.7+lapack-3.5.0+blas-20110419
@@ -12,7 +12,7 @@ sink(logfile, type="message")
 
 library(data.table)
 cds <- fread("data/dNdS_by_transcript.2016-02-10.12-27-58.tsv", header=TRUE)
-# 61,553
+print(paste(nrow(cds),"transcripts dNdS values loaded.",))
 
 setnames(cds,"gene.id","gene")
 setnames(cds,"cds.length","cds_length")
@@ -25,25 +25,29 @@ setkey(max.cds.by.gene,gene,max.cds)
 setkey(cds,gene,cds_length)
 dNdS.by.gene <- cds[max.cds.by.gene,]
 
-# dNdS.by.gene[duplicated(dNdS.by.gene)==TRUE,]
-# 5274 duplicates+ (by gene,cds_length)
+paste(nrow(dNdS.by.gene[duplicated(dNdS.by.gene)==TRUE,]),"duplicate entries (same gene and cds length) after getting dNdS from canonical (longest) transcript")
 
-# nrow(dNdS.by.gene[,.(stddev = sd(dNdS)),by=gene][stddev>0.1])
-# 22 genes with high stddev per gene, treat as seperate genes???
+print(paste(nrow(dNdS.by.gene[,.(stddev = sd(dNdS)),by=gene][stddev>0.1]),"genes with high standard deviation between transcripts and dNdS value")
+# treat as seperate genes???
 
 # set key as all columns
 setkey(dNdS.by.gene)
 
 # Calculate mean dNdS per gene to remove duplicates
 dNdS.by.gene <- unique(dNdS.by.gene[is.finite(dNdS),.(dNdS = mean(dNdS,na.rm=TRUE),gene.name,chromosome,cds_length,uS=mean(S),uN=mean(N),ucS=mean(synon.probability),ucN=mean(nonsynon.probability)),by=gene])
-# dNdS.by.gene[uS<3.0000001,]
-# 1618 genes with uS<3
-# 17,448 genes left
 
-# Still 56 genes with dNdS = 0 due to no N found
+# add ranking and order
 dNdS.by.gene[,ranking:=rank(dNdS,ties.method="first")]
 dNdS.by.gene <- dNdS.by.gene[order(-ranking)]
-#19,066 genes
+print(paste(nrow(dNdS.by.gene),"genes")
+
+# log dNdS as it's a ratio
+dNdS.by.gene$Log.dNdS <- log10(dNdS.by.gene$dNdS)
+# Some with N=0 leads to infinite log.dNdS values
+
+######################
+###### Annotate ######
+######################
 
 cancer.genes <- fread("data/raw/cancer_gene_census.csv", header=TRUE)
 setnames(cancer.genes, make.names(names(cancer.genes)))
@@ -51,28 +55,6 @@ dNdS.by.gene$cancer.gene <- dNdS.by.gene$gene.name %in% cancer.genes$Gene.Symbol
 
 # Which cancer gene names not in dNdS.by.gene database
 cancer.genes[!(cancer.genes$Gene.Symbol %in% dNdS.by.gene$gene.name),.(Gene.Symbol,Entrez.GeneId)]
-
-#  Gene.Symbol Entrez.GeneId
-#  1:        BCL5           603
-#  2:     C12orf9         93669
-#  3:    C15orf65        145788
-#  4: CDKN2A(p14)          1029
-#  5:      DUX4L1         22947
-#  6:    HMGN2P46        283651
-#  7:         IGH          3492
-#  8:         IGK         50802
-#  9:         IGL          3535
-# 10:      MALAT1        378938
-# 11:  RNF217-AS1          7955
-# 12:       RPL22          6146
-# 13:     RUNDC2A         84127
-# 14:        SSX2          6757
-# 15:        TCL6         27004
-# 16:         TRA          6955
-# 17:         TRB          6957
-# 18:         TRD          6964
-# 19:      ZNF198          7750
-# 20:      ZNF278         23598
 
 # 551 / 572
 # Some because not in ensembl database at all, some because either S or N = 0
@@ -89,8 +71,8 @@ cancer.genes.vogelstein <- fread("data/raw/vogelstein_driver_genes.tdv", header=
 dNdS.by.gene$cancer.gene.vogelstein <- dNdS.by.gene$gene.name %in% cancer.genes.vogelstein$gene_name
 
 # Which genes in vogelstein do not map to dNdS.by.gene database
+print("Genes in vogelstein list not matched to dNdS value:")
 cancer.genes.vogelstein[!(cancer.genes.vogelstein$gene_name %in% dNdS.by.gene$gene.name),gene_name]
-# [1] "FAM123B" "MLL2"    "MLL3"
 # 122 / 125
 
 # For all rows in dNdS.by.gene, add classification from cancer.genes.vogelstein if possible
@@ -98,23 +80,20 @@ setkey(cancer.genes.vogelstein,gene_name)
 setkey(dNdS.by.gene,gene.name)
 dNdS.by.gene$classification <- cancer.genes.vogelstein[dNdS.by.gene,classification]
 
-dNdS.by.gene$Log.dNdS <- log10(dNdS.by.gene$dNdS)
-
 
 # Add expression data
-
 RNAseq <- fread("results/RNAseq.by.gene.2016-01-26.14-26-42.tsv", header=TRUE)
 setnames(RNAseq,c("gene.name","mean.expression","mean.of.stdev.of.expression","expression.ranking","expression.percent.rank","log10.expression"))
 setkey(RNAseq,gene.name)
 
 # Which dNdS.by.gene gene names not in RNAseq database
-# dNdS.by.gene[!(dNdS.by.gene$gene.name %in% RNAseq$gene.name),.(gene.name)]$gene.name
-# 1,702 !
+print(paste(length(dNdS.by.gene[!(dNdS.by.gene$gene.name %in% RNAseq$gene.name),.(gene.name)]$gene.name),"genes not in RNAseq database"))
 
 # For all rows in dNdS.by.gene, add expression from RNAseq if avaliable
 dNdS.by.gene <- RNAseq[dNdS.by.gene,]
 
 
+# to detect bias calculate dN, dS, and ranking given a cutoff
 dNdS.by.gene$dS <- dNdS.by.gene$uS / dNdS.by.gene$ucS
 dNdS.by.gene$dN <- dNdS.by.gene$uN / dNdS.by.gene$ucN
 
@@ -125,8 +104,10 @@ dNdS.by.gene[uS>15,ranking.3:=rank(dNdS,ties.method="first")]
 dNdS.by.gene[uS>3 & uN>3,ranking.4:=rank(dNdS,ties.method="first")]
 
 
+#########################
+###### Plot Graphs ######
+#########################
 
-# Plot Graphs!
 library(ggplot2)
 library(ggrepel)
 
@@ -165,9 +146,9 @@ ggplot(dNdS.by.gene, aes(sample = Log.dNdS)) + stat_qq(distribution = qnorm, dpa
 
 library(metRology)
 # Fitting t dist over actual, args from paramst
-ggplot(dNdS.by.gene, aes(Log.dNdS)) + geom_histogram(aes(y=..density..),binwidth=0.01) + geom_vline(xintercept = 0,color = "blue") + theme_grey(base_size = 30) + labs(x="mean dN/dS per gene",title="Overall Distribution")  + stat_function(geom = "line", fun = dt.scaled, arg = list(df = paramst$df, mean = paramst$m, sd = paramst$s), colour = "red") + annotate("text", x = 1, y=2.5, label = paste("df:",signif(paramst$df,3),"\n Mean: ",signif(paramst$m,3),"\n sd:",signif(paramst$s,3)))
-#4.838563, mean = -0.1599829, sd = 0.1631476
-#df 3.973024, mean = -0.01084246, sd = 0.1449396
+ggplot(dNdS.by.gene, aes(Log.dNdS)) + geom_histogram(aes(y=..density..),binwidth=0.01) + geom_vline(xintercept = 0,color = "blue") + theme_grey(base_size = 30) + labs(x="Log10(mean dN/dS per gene)",title="Overall Distribution")  + stat_function(geom = "line", fun = dt.scaled, arg = list(df = paramst$df, mean = paramst$m, sd = paramst$s), colour = "red") + annotate("text", x = 1, y=2.5, label = paste("df:",signif(paramst$df,3),"\n Mean: ",signif(paramst$m,3),"\n sd:",signif(paramst$s,3)))
+
+print(paste("T-distribution parameters (of Log.dNdS): df:",signif(paramst$df,3),"\n Mean: ",signif(paramst$m,3))
 
 # Cancer vs normal density dist
 ggplot(dNdS.by.gene[uS>3], aes(x=dNdS,fill=cancer.gene.vogelstein)) + geom_density(alpha=0.3) + geom_vline(xintercept = 1,color = "red") + theme_grey(base_size = 30) + labs(x="mean dN/dS per gene",title="Distribution of known cancer genes") + scale_x_log10() + theme(legend.position="bottom")
