@@ -11,8 +11,11 @@ sink(logfile, type="message")
 # install.packages('metRology')
 
 library(data.table)
-cds <- fread("data/dNdS-2016.01.29.tsv", header=TRUE)
+cds <- fread("data/dNdS_by_transcript.2016-02-10.12-27-58.tsv", header=TRUE)
 # 61,553
+
+setnames(cds,"gene.id","gene")
+setnames(cds,"cds.length","cds_length")
 
 # For each gene, find max cds length
 max.cds.by.gene <- unique(cds[is.finite(dNdS),.(max.cds = max(cds_length,na.rm=TRUE)),by=gene])
@@ -32,7 +35,7 @@ dNdS.by.gene <- cds[max.cds.by.gene,]
 setkey(dNdS.by.gene)
 
 # Calculate mean dNdS per gene to remove duplicates
-dNdS.by.gene <- unique(dNdS.by.gene[is.finite(dNdS),.(dNdS = mean(dNdS,na.rm=TRUE),gene.name,chromosome,cds_length,uS=mean(S),uN=mean(N),ucS=mean(synonymous_sites),ucN=mean(nonsynonymous_sites)),by=gene])
+dNdS.by.gene <- unique(dNdS.by.gene[is.finite(dNdS),.(dNdS = mean(dNdS,na.rm=TRUE),gene.name,chromosome,cds_length,uS=mean(S),uN=mean(N),ucS=mean(synon.probability),ucN=mean(nonsynon.probability)),by=gene])
 # dNdS.by.gene[uS<3.0000001,]
 # 1618 genes with uS<3
 # 17,448 genes left
