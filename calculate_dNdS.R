@@ -22,6 +22,15 @@ setkey(counts, transcript.id)
 # counts[is.na(N),]
 # 514, now 413
 
+# No rows with both N and S NA - i.e. all NA's are actually Zeros - gene must have been sequenced if one of the two catagories are >0
+# Non sequenced genes are just not in this list as it's generated from variant observed list
+counts[is.na(N) & is.na(S),]
+
+# Therefore set NA's to 0
+counts$N[is.na(counts$N)] <- 0
+counts$S[is.na(counts$S)] <- 0
+
+# Get gene name by transcript
 transcript.gene <- unique(observed_variants[variant.class!="exon_variant",gene.name, by=transcript.id])
 setkey(transcript.gene, transcript.id)
 
