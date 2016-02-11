@@ -17,7 +17,7 @@ if (file.exists("data/single.base.coding.substitutions.rds")){
 }else{
 
 	# Load somatic mutation tsv
-	file_list <- list.files(path="/mnt/lustre/users/dwells/data/raw/ICGC",pattern="simple_somatic_mutation.open.*.tsv.gz",full.names=TRUE)
+	file_list <- list.files(path="data/raw/ICGC",pattern="simple_somatic_mutation.open.*.tsv.gz",full.names=TRUE)
 
 	# Filter as soon as reading or will take up too much memory (>64GB), MELA-AU alone is 34GB unzipped
 	read.and.filter <- function(x) {
