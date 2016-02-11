@@ -91,7 +91,9 @@ if (file.exists("data/coding.trimer.counts.rds")){
 }
 
 # number of donors per project
-donor.count <- ICGCraw[,.(donor.count=length(icgc_donor_id)),by=project_code][order(donor.count)]
+setkey(ICGCraw,icgc_donor_id)
+ICGCdonors <- unique(ICGCraw)
+donor.count <- ICGCdonors[,.("donor.count"=.N),by=project_code][order(donor.count)]
 
 CJ.dt = function(X,Y) {
   stopifnot(is.data.table(X),is.data.table(Y))
