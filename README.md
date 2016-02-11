@@ -1,9 +1,12 @@
 # Ludwig
 Looking for negative selection in cancer genomes - DPhil rotation project with Benjamin Schuster-Böckler at the Ludwig Institute for Cancer Reasearch at the University of Oxford
 
-In theory the driver script dNdS.sh should automatically download the raw data, analyse it and output the results:
+## Installation
+The Makefile should automatically download the raw data, analyse it and output the results:
 ```
-$ dNdS.sh
+git clone --depth 1 https://github.com/daniel-wells/Ludwig.git
+cd Ludwig
+make
 ```
 
 ## Data Flow Diagram
@@ -16,4 +19,8 @@ $ dNdS.sh
   - ggplot2 2.0.0
   - metRology 0.9-17
   - ggrepel 0.4
+- GNU Make 3.81
+- git 2.5.4
 - graphviz 2.38.0 (20140413.2041) (dot for creating data flow diagram)
+
+## Licence
