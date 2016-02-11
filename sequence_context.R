@@ -63,7 +63,7 @@ vr_context <- mutationContext(vr, genome)
 motif.matrix.count = motifMatrix(vr_context, group = "study", normalize = FALSE)
 
 if (file.exists("data/coding.trimer.counts.rds")){
-	coding.trimer.counts2 <- readRDS("data/coding.trimer.counts.rds")
+	coding.trimer.counts <- readRDS("data/coding.trimer.counts.rds")
 }else{
 	# Extract trinucleotide frequency
 	library(TxDb.Hsapiens.UCSC.hg19.knownGene)
