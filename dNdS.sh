@@ -24,7 +24,6 @@ sha256sum data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz >> data/raw/SHA256SUMS
 http://www.ensembl.org/biomart/martview/a9103936cd932b57917528550c7c9a2b?VIRTUALSCHEMANAME=default&ATTRIBUTES=hsapiens_gene_ensembl.default.feature_page.external_gene_name|hsapiens_gene_ensembl.default.feature_page.gene_biotype|hsapiens_gene_ensembl.default.feature_page.transcript_biotype|hsapiens_gene_ensembl.default.feature_page.ensembl_gene_id|hsapiens_gene_ensembl.default.feature_page.ensembl_transcript_id&FILTERS=&VISIBLEPANEL=resultspanel
 sha256sum data/raw/mart_export.txt.gz >> data/raw/SHA256SUMS
 
-gzip -dc data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz > data/Homo_sapiens.GRCh37.75.cds.all.fa
 
 Rscript calculate_nonsynon_sites.R
 # 15 mins
