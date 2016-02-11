@@ -17,7 +17,7 @@ if (file.exists("data/single.base.coding.substitutions.rds")){
 }else{
 
 	# Load somatic mutation tsv
-	file_list <- list.files(path="/mnt/lustre/users/dwells/data/raw/ICGC",pattern="simple_somatic_mutation.open.*.tsv.gz",full.names=TRUE)
+	file_list <- list.files(path="data/raw/ICGC",pattern="simple_somatic_mutation.open.*.tsv.gz",full.names=TRUE)
 
 	# Filter as soon as reading or will take up too much memory (>64GB), MELA-AU alone is 34GB unzipped
 	read.and.filter <- function(x) {
@@ -63,7 +63,7 @@ vr_context <- mutationContext(vr, genome)
 motif.matrix.count = motifMatrix(vr_context, group = "study", normalize = FALSE)
 
 if (file.exists("data/coding.trimer.counts.rds")){
-	coding.trimer.counts2 <- readRDS("data/coding.trimer.counts.rds")
+	coding.trimer.counts <- readRDS("data/coding.trimer.counts.rds")
 }else{
 	# Extract trinucleotide frequency
 	library(TxDb.Hsapiens.UCSC.hg19.knownGene)
@@ -91,7 +91,9 @@ if (file.exists("data/coding.trimer.counts.rds")){
 }
 
 # number of donors per project
-donor.count <- ICGCraw[,.(donor.count=length(icgc_donor_id)),by=project_code][order(donor.count)]
+setkey(ICGCraw,icgc_donor_id)
+ICGCdonors <- unique(ICGCraw)
+donor.count <- ICGCdonors[,.("donor.count"=.N),by=project_code][order(donor.count)]
 
 CJ.dt = function(X,Y) {
   stopifnot(is.data.table(X),is.data.table(Y))
@@ -125,7 +127,17 @@ motif.probabilities <- trimer.count.by.project[motif.probabilities]
 # Calculate mutation "probability"
 motif.probabilities$mutation.probability <- motif.probabilities$mutation_count / motif.probabilities$total.count
 
-plotMutationSpectrum(vr_context, "study")
+
+# number of somatic coding mutations per donor
+hist(ICGCraw[,.N,by=icgc_donor_id][order(N)]$N,breaks=3000,xlim=c(0,500))
 dev.off()
 
-dput(motif.matrix.freq, file = "motif.matrix.freq.dput")
+w_df = melt(motif.matrix.count, varnames = c("motif", "sample"))
+    w_df$alteration = sub("([ACGTN])([ACGTN]) .+", "\\1>\\2", w_df$motif)
+    w_df$context = sub("[ACGTN][ACGTN] (.+)", "\\1", w_df$motif)
+
+pdf(width=20,height=60)
+ggplot(w_df) + geom_bar(aes_string(x = "context", y = "value"), stat = "identity", position = "identity") + facet_grid(sample ~ alteration,scales="free_y")
+dev.off()
+
+saveRDS(motif.probabilities, "data/motif.probabilities.rds")
