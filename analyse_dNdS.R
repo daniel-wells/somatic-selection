@@ -27,7 +27,7 @@ dNdS.by.gene <- cds[max.cds.by.gene,]
 
 paste(nrow(dNdS.by.gene[duplicated(dNdS.by.gene)==TRUE,]),"duplicate entries (same gene and cds length) after getting dNdS from canonical (longest) transcript")
 
-print(paste(nrow(dNdS.by.gene[,.(stddev = sd(dNdS)),by=gene][stddev>0.1]),"genes with high standard deviation between transcripts and dNdS value")
+print(paste(nrow(dNdS.by.gene[,.(stddev = sd(dNdS)),by=gene][stddev>0.1]),"genes with high standard deviation between transcripts and dNdS value"))
 # treat as seperate genes???
 
 # set key as all columns
@@ -39,7 +39,7 @@ dNdS.by.gene <- unique(dNdS.by.gene[is.finite(dNdS),.(dNdS = mean(dNdS,na.rm=TRU
 # add ranking and order
 dNdS.by.gene[,ranking:=rank(dNdS,ties.method="first")]
 dNdS.by.gene <- dNdS.by.gene[order(-ranking)]
-print(paste(nrow(dNdS.by.gene),"genes")
+print(paste(nrow(dNdS.by.gene),"genes"))
 
 # log dNdS as it's a ratio
 dNdS.by.gene$Log.dNdS <- log10(dNdS.by.gene$dNdS)
@@ -148,7 +148,7 @@ library(metRology)
 # Fitting t dist over actual, args from paramst
 ggplot(dNdS.by.gene, aes(Log.dNdS)) + geom_histogram(aes(y=..density..),binwidth=0.01) + geom_vline(xintercept = 0,color = "blue") + theme_grey(base_size = 30) + labs(x="Log10(mean dN/dS per gene)",title="Overall Distribution")  + stat_function(geom = "line", fun = dt.scaled, arg = list(df = paramst$df, mean = paramst$m, sd = paramst$s), colour = "red") + annotate("text", x = 1, y=2.5, label = paste("df:",signif(paramst$df,3),"\n Mean: ",signif(paramst$m,3),"\n sd:",signif(paramst$s,3)))
 
-print(paste("T-distribution parameters (of Log.dNdS): df:",signif(paramst$df,3),"\n Mean: ",signif(paramst$m,3))
+print(paste("T-distribution parameters (of Log.dNdS): df:",signif(paramst$df,3),"\n Mean: ",signif(paramst$m,3)))
 
 # Cancer vs normal density dist
 ggplot(dNdS.by.gene[uS>3], aes(x=dNdS,fill=cancer.gene.vogelstein)) + geom_density(alpha=0.3) + geom_vline(xintercept = 1,color = "red") + theme_grey(base_size = 30) + labs(x="mean dN/dS per gene",title="Distribution of known cancer genes") + scale_x_log10() + theme(legend.position="bottom")
