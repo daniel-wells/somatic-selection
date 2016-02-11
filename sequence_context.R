@@ -140,4 +140,4 @@ pdf(width=20,height=60)
 ggplot(w_df) + geom_bar(aes_string(x = "context", y = "value"), stat = "identity", position = "identity") + facet_grid(sample ~ alteration,scales="free_y")
 dev.off()
 
-dput(motif.matrix.freq, file = "motif.matrix.freq.dput")
+saveRDS(motif.probabilities, "data/motif.probabilities.rds")
