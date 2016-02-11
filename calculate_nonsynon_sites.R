@@ -177,3 +177,47 @@ nonsynon.count.dt[, c("reference.genome","chromosome","chromosome.start","chromo
 # Save
 write.table(nonsynon.count.dt, "data/expected_variants_per_transcript.tsv", sep="\t",row.names=FALSE,quote=FALSE)
 saveRDS(nonsynon.count.dt, "data/expected_variants_per_transcript.rds")
+
+
+
+# Quality Control Checks:
+expected.variants <- readRDS("data/expected_variants_per_transcript.rds")
+old.expected <- fread("data/archive/N_per_transcript_clean.tsv")
+summary(expected.variants)
+str(expected.variants)
+expected.variants[nonsynon.probability>5,]
+
+library(ggplot2)
+
+# Set catagoricals as factors
+expected.variants[, c("reference.genome","chromosome","strand","gene.biotype","transcript.biotype","cds.type") := lapply(expected.variants[,c("reference.genome","chromosome","strand","gene.biotype","transcript.biotype","cds.type"),with=FALSE],as.factor),with=FALSE]
+
+# Correlation between old and new nonsynon values
+setnames(old.expected,"transcript","transcript.id")
+setkey(old.expected,transcript.id)
+setnames(expected.variants,"Ensembl.Transcript.ID","transcript.id")
+setkey(expected.variants,transcript.id)
+merged <- merge(expected.variants,old.expected,all=TRUE)
+merged$old.new.ratio <- merged$nonsynon.probability / merged$nonsynonymous_sites
+
+pdf(paste("results/QC.nonsynon-vs-cds.length",format(Sys.time(), "%Y-%m-%d.%H-%M-%S"), "pdf", sep = "."),onefile = TRUE)
+plot(expected.variants$cds.length,expected.variants$nonsynon.probability,xlim=c(0,7000),ylim=
+c(0,1.6))
+new <- lm(expected.variants$nonsynon.probability~expected.variants$cds.length)
+abline(new, col="red")
+text(x=4000,y=0.2,label=paste("Intercept:",signif(new[[1]][1],3),"\nGradient:",signif(new[[1]][2],3)))
+
+plot(old.expected$cds_length,old.expected$nonsynonymous_sites,xlim=c(0,7000),ylim=c(0,6000))
+old <- lm(old.expected$nonsynonymous_sites~old.expected$cds_length)
+abline(old, col="red")
+text(x=4000,y=500,label=paste("Intercept:",signif(old[[1]][1],3),"\nGradient:",signif(old[[1]][2],3)))
+
+
+plot(merged$nonsynonymous_sites,merged$nonsynon.probability)
+#,col= ifelse(merged$old.new.ratio >= 0.00000161, "red","black")
+plot(merged$nonsynonymous_sites,merged$nonsynon.probability,xlim=c(0,15000),ylim=c(0,4),col=rgb(0,0,0,alpha=0.2))
+plot(merged$cds_length-merged$nonsynonymous_sites,merged$synon.probability,xlim=c(0,4000),ylim=c(0,1.2),col=rgb(0,0,0,alpha=0.2))
+
+dev.off()
+
+#merged[order(-old.new.ratio)][is.na(old.new.ratio)==FALSE][nonsynonymous_sites>12000]
