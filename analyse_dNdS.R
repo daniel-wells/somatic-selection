@@ -31,7 +31,7 @@ print(paste(nrow(dNdS.by.gene[,.(stddev = sd(dNdS)),by=gene][stddev>0.1]),"genes
 # treat as seperate genes???
 
 # set key as all columns
-setkey(dNdS.by.gene)
+setkey(dNdS.by.gene,gene)
 
 # Calculate mean dNdS per gene to remove duplicates
 dNdS.by.gene <- unique(dNdS.by.gene[is.finite(dNdS),.(dNdS = mean(dNdS,na.rm=TRUE),gene.name,chromosome,chromosome.start,strand,cds_length,uS=mean(S),uN=mean(N),ucS=mean(synon.probability),ucN=mean(nonsynon.probability)),by=gene])
