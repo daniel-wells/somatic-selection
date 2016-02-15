@@ -130,6 +130,20 @@ ggplot(dNdS.by.gene, aes(ranking.2, dS)) + geom_point(alpha=0.3) + geom_smooth()
 
 ggplot(dNdS.by.gene, aes(ranking.3, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,750) + labs(title="dS by ranking for uS>15") + annotate("text", x = 1000, y=0, label = paste(nrow(dNdS.by.gene[is.na(ranking.3)==FALSE]),"genes"))
 
+
+# Funnel plot (uS by dNdS)
+# with uS as 'study size'
+ggplot(dNdS.by.gene, aes(uS,Log.dNdS)) + geom_point(alpha=0.3) + xlim(0,200)
+
+# with cds_length as 'study size'
+ggplot(dNdS.by.gene, aes(cds_length,Log.dNdS)) + geom_point(alpha=0.3) + xlim(0,15000)
+
+# Identify outlier genes
+dNdS.by.gene[uS>100 & Log.dNdS<(-0.5)]
+# MMLT3, TBP, DSPP
+dNdS.by.gene[uS>25 & Log.dNdS<(-1.5)]
+# THEM6
+
 # Order chromosomes
 dNdS.by.gene$chromosome <- factor(dNdS.by.gene$chromosome, levels = c(1:22,"X","Y","MT"))
 
