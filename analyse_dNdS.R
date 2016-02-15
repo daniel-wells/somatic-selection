@@ -135,18 +135,15 @@ ggplot(dNdS.by.gene, aes(ranking.3, dS)) + geom_point(alpha=0.3) + geom_smooth()
 # with uS as 'study size' (size approximating power which is background mutation rate, more than just cds_length)
 up.conf <- function(x) {(5/(x+3))+0.1}
 low.conf <- function(x) {(-7/(x+2))-0.25}
+up.conf.l <- function(x) {(5/(x+3))+0.2}
+low.conf.l <- function(x) {(-7/(x+2))-0.35}
 
-ggplot(dNdS.by.gene[is.finite(Log.dNdS)], aes(uS,Log.dNdS)) + geom_point(aes(colour = cancer.gene),alpha=0.3) + xlim(0,280) + ylim(-1.6,+1.6) + scale_colour_manual(name="In COSMIC cancer gene census?",  values =c("black", "red")) + theme(legend.position="bottom") + stat_function(fun = up.conf)+ stat_function(fun = low.conf)
+ggplot(dNdS.by.gene[is.finite(Log.dNdS)], aes(uS,Log.dNdS)) + geom_point(aes(colour = cancer.gene),alpha=0.3) + xlim(0,280) + ylim(-1.6,+1.6) + scale_colour_manual(name="In COSMIC cancer gene census?",  values =c("black", "red")) + theme(legend.position="bottom") + stat_function(fun = up.conf)+ stat_function(fun = low.conf) + geom_label_repel(data = dNdS.by.gene[is.finite(Log.dNdS)][Log.dNdS<low.conf.l(uS) | Log.dNdS>up.conf.l(uS)], aes(label = gene.name), size = 2, box.padding = unit(0.5, "lines"), point.padding = unit(0.1, "lines"), force=1,segment.size=0.2)
 
 print(paste("Total Vogelstein cancer genes:",sum(dNdS.by.gene$cancer.gene.vogelstein)))
 print(paste("Vogelstein cancer genes in top reigon:",sum(dNdS.by.gene[Log.dNdS>up.conf(uS)]$cancer.gene.vogelstein)))
 print(paste("All genes in top reigon:",nrow(dNdS.by.gene[Log.dNdS>up.conf(uS)])))
 
-# Identify outlier genes
-dNdS.by.gene[uS>100 & Log.dNdS<(-0.5)]
-# MMLT3, TBP, DSPP
-dNdS.by.gene[uS>25 & Log.dNdS<(-1.5)]
-# THEM6
 
 # Order chromosomes
 dNdS.by.gene$chromosome <- factor(dNdS.by.gene$chromosome, levels = c(1:22,"X","Y","MT"))
