@@ -148,7 +148,7 @@ dNdS.by.gene[uS>25 & Log.dNdS<(-1.5)]
 dNdS.by.gene$chromosome <- factor(dNdS.by.gene$chromosome, levels = c(1:22,"X","Y","MT"))
 
 # Graphs of dNdS by chromosome position
-ggplot(dNdS.by.gene, aes(chromosome.start, Log.dNdS)) + geom_point(alpha=0.3,size=0.05) + facet_wrap(~chromosome2,scales="free_x")
+ggplot(dNdS.by.gene, aes(chromosome.start, Log.dNdS)) + geom_point(alpha=0.3,size=0.05) + facet_wrap(~chromosome,scales="free_x")
 
 # Overall Dist
 ggplot(dNdS.by.gene[uS>3], aes(dNdS)) + geom_histogram(binwidth = 0.01) + geom_vline(xintercept = 1,color = "red") + theme_grey(base_size = 30) + labs(x="mean dN/dS per gene",title="Overall dN/dS Distribution") + scale_x_log10()
