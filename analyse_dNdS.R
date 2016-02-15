@@ -132,11 +132,15 @@ ggplot(dNdS.by.gene, aes(ranking.3, dS)) + geom_point(alpha=0.3) + geom_smooth()
 
 
 # Funnel plot (uS by dNdS)
-# with uS as 'study size'
-ggplot(dNdS.by.gene, aes(uS,Log.dNdS)) + geom_point(alpha=0.3) + xlim(0,200)
+# with uS as 'study size' (size approximating power which is background mutation rate, more than just cds_length)
+up.conf <- function(x) {(5/(x+3))+0.1}
+low.conf <- function(x) {(-7/(x+2))-0.25}
 
-# with cds_length as 'study size'
-ggplot(dNdS.by.gene, aes(cds_length,Log.dNdS)) + geom_point(alpha=0.3) + xlim(0,15000)
+ggplot(dNdS.by.gene[is.finite(Log.dNdS)], aes(uS,Log.dNdS)) + geom_point(aes(colour = cancer.gene),alpha=0.3) + xlim(0,280) + ylim(-1.6,+1.6) + scale_colour_manual(name="In COSMIC cancer gene census?",  values =c("black", "red")) + theme(legend.position="bottom") + stat_function(fun = up.conf)+ stat_function(fun = low.conf)
+
+print(paste("Total Vogelstein cancer genes:",sum(dNdS.by.gene$cancer.gene.vogelstein)))
+print(paste("Vogelstein cancer genes in top reigon:",sum(dNdS.by.gene[Log.dNdS>up.conf(uS)]$cancer.gene.vogelstein)))
+print(paste("All genes in top reigon:",nrow(dNdS.by.gene[Log.dNdS>up.conf(uS)])))
 
 # Identify outlier genes
 dNdS.by.gene[uS>100 & Log.dNdS<(-0.5)]
