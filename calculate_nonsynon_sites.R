@@ -99,27 +99,6 @@ fivemer.probabilities <- calculate.fivemer.probability()
 # for some reason TAA is added to end of first two column names
 names(fivemer.probabilities) <- c("nonsynon.prob","synon.prob","project_code","fivemer")
 
-# # All (changing) single nt substitutions in codon
-# point.mutate <- function(codon){
-# codon.mutations = c()
-# 	for (i in (1:3)){
-# 		ncodon = codon
-# 		for (letter in letters[letters != substr(codon, i, i)]){
-# 			substr(ncodon, i, i) <- letter
-# 			codon.mutations<-c(codon.mutations,ncodon)
-# 			}
-# 		}
-# stopifnot(length(codon.mutations) == 9)
-# return(codon.mutations)
-# }
-#
-# mutations <- point.mutate(codon)
-# 	for (mutated in mutations){
-# 		reverseComplement(DNAString(codon))
-# 		mutation.in.context
-# 		is.nonsynon(mutated,codon) * motif.matrix.count[mutation.in.context,study] / ( trimer.counts[codon.complement] * donor.number[study] )
-#  	}
-# }
 
 print("Reading in reference genome")
 fasta <- readDNAStringSet("/mnt/lustre/users/dwells/data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz")
