@@ -120,15 +120,15 @@ ggplot(dNdS.by.gene, aes(uS)) + geom_histogram(binwidth = 1) + scale_x_continuou
 ggplot(dNdS.by.gene, aes(uN)) + geom_histogram(binwidth = 1) + scale_x_continuous(limits = c(0, 100)) + labs(x="mean nonsynonymous mutations per gene",title="Distribution of N per gene")
 
 # Graphs of dS by ranking
-ggplot(dNdS.by.gene, aes(ranking, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,110000) + labs(title="dS by ranking for all genes") + annotate("text", x = 1000, y=0, label = paste(nrow(dNdS.by.gene[is.na(ranking)==FALSE]),"genes"))
+ggplot(dNdS.by.gene, aes(ranking, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,750) + labs(title="dS by ranking for all genes") + annotate("text", x = 1000, y=0, label = paste(nrow(dNdS.by.gene[is.na(ranking)==FALSE]),"genes"))
 
-ggplot(dNdS.by.gene, aes(ranking.1, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,110000) + labs(title="dS by ranking for uS>3") + annotate("text", x = 1000, y=0, label = paste(nrow(dNdS.by.gene[is.na(ranking.1)==FALSE]),"genes"))
+ggplot(dNdS.by.gene, aes(ranking.1, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,750) + labs(title="dS by ranking for uS>3") + annotate("text", x = 1000, y=0, label = paste(nrow(dNdS.by.gene[is.na(ranking.1)==FALSE]),"genes"))
 
-ggplot(dNdS.by.gene, aes(ranking.4, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,110000) + labs(title="dS by ranking for uS>3 & uN>3") + annotate("text", x = 1000, y=0, label = paste(nrow(dNdS.by.gene[is.na(ranking.4)==FALSE]),"genes"))
+ggplot(dNdS.by.gene, aes(ranking.4, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,750) + labs(title="dS by ranking for uS>3 & uN>3") + annotate("text", x = 1000, y=0, label = paste(nrow(dNdS.by.gene[is.na(ranking.4)==FALSE]),"genes"))
 
-ggplot(dNdS.by.gene, aes(ranking.2, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,110000) + labs(title="dS by ranking for uS>10") + annotate("text", x = 1000, y=0, label = paste(nrow(dNdS.by.gene[is.na(ranking.2)==FALSE]),"genes"))
+ggplot(dNdS.by.gene, aes(ranking.2, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,750) + labs(title="dS by ranking for uS>10") + annotate("text", x = 1000, y=0, label = paste(nrow(dNdS.by.gene[is.na(ranking.2)==FALSE]),"genes"))
 
-ggplot(dNdS.by.gene, aes(ranking.3, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,110000) + labs(title="dS by ranking for uS>15") + annotate("text", x = 1000, y=0, label = paste(nrow(dNdS.by.gene[is.na(ranking.3)==FALSE]),"genes"))
+ggplot(dNdS.by.gene, aes(ranking.3, dS)) + geom_point(alpha=0.3) + geom_smooth() + ylim(0,750) + labs(title="dS by ranking for uS>15") + annotate("text", x = 1000, y=0, label = paste(nrow(dNdS.by.gene[is.na(ranking.3)==FALSE]),"genes"))
 
 # Order chromosomes
 dNdS.by.gene$chromosome <- factor(dNdS.by.gene$chromosome, levels = c(1:22,"X","Y","MT"))
