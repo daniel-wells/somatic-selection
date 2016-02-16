@@ -64,7 +64,6 @@ vr = VRanges(
 	alt = single.base.coding.substitutions$mutated_to_allele,
 	sampleNames = single.base.coding.substitutions$icgc_donor_id,
 	study = single.base.coding.substitutions$project_code,
-	cluster = single.base.coding.substitutions$cluster,
 	sequencing_strategy = single.base.coding.substitutions$sequencing_strategy)
 
 # add "chr" to work with UCSC.hg19
@@ -73,7 +72,7 @@ vr <- ucsc(vr)
 ## Annotate variants with context
 vr_context <- mutationContext(vr, genome)
 
-motif.matrix.count = motifMatrix(vr_context, group = "cluster", normalize = FALSE)
+motif.matrix.count = motifMatrix(vr_context, group = "study", normalize = FALSE)
 
 if (file.exists("data/coding.trimer.counts.rds")){
 	coding.trimer.counts <- readRDS("data/coding.trimer.counts.rds")
@@ -103,10 +102,10 @@ if (file.exists("data/coding.trimer.counts.rds")){
 	saveRDS(coding.trimer.counts, "data/coding.trimer.counts.rds")	
 }
 
-# number of donors per cluster
+# number of donors per project
+donor.count <- ICGCdonors[,.("donor.count"=.N),by=project_code][order(donor.count)]
 setkey(single.base.coding.substitutions,icgc_donor_id)
 ICGCdonors <- unique(single.base.coding.substitutions)
-donor.count <- ICGCdonors[,.("donor.count"=.N),by=cluster][order(donor.count)]
 
 CJ.dt = function(X,Y) {
   stopifnot(is.data.table(X),is.data.table(Y))
@@ -120,23 +119,23 @@ CJ.dt = function(X,Y) {
 
 
 # Convert coding.trimer.counts to data table and cross join with donor counts
-trimer.count.by.cluster <- CJ.dt(data.table("base_motif"=names(coding.trimer.counts),coding.trimer.counts),donor.count)
+trimer.count.by.project <- CJ.dt(data.table("base_motif"=names(coding.trimer.counts),coding.trimer.counts),donor.count)
 # overall counts of trinucleotides over all donors in a project
-trimer.count.by.cluster$total.count <- trimer.count.by.cluster$coding.trimer.counts * trimer.count.by.cluster$donor.count
+trimer.count.by.project$total.count <- trimer.count.by.project$coding.trimer.counts * trimer.count.by.project$donor.count
 
 
 # Convert mutation motif counts to data table
 motif.probabilities <- as.data.table(melt(motif.matrix.count))
-setnames(motif.probabilities,c("mutation","cluster","mutation_count"))
+setnames(motif.probabilities,c("mutation","project_code","mutation_count"))
 # add base motif column
 motif.probabilities$mutation <- as.character(motif.probabilities$mutation)
 motif.probabilities$base_motif <- subseq(motif.probabilities$mutation, 4, 6)
 subseq(motif.probabilities$base_motif, 2, 2) <- subseq(motif.probabilities$mutation, 1, 1)
 
 # all rows in motif matrix with timer counts added
-setkey(trimer.count.by.cluster,cluster,base_motif)
-setkey(motif.probabilities,cluster,base_motif)
-motif.probabilities <- trimer.count.by.cluster[motif.probabilities]
+setkey(trimer.count.by.project,project_code,base_motif)
+setkey(motif.probabilities,project_code,base_motif)
+motif.probabilities <- trimer.count.by.project[motif.probabilities]
 # Calculate mutation "probability"
 motif.probabilities$mutation.probability <- motif.probabilities$mutation_count / motif.probabilities$total.count
 
@@ -153,4 +152,4 @@ pdf(width=20,height=60)
 ggplot(w_df) + geom_bar(aes_string(x = "context", y = "value"), stat = "identity", position = "identity") + facet_grid(sample ~ alteration,scales="free_y")
 dev.off()
 
-saveRDS(motif.probabilities, "data/motif.probabilities.by.cluster.rds")
+saveRDS(motif.probabilities, "data/motif.probabilities.rds")
