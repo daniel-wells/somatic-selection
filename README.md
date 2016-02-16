@@ -29,6 +29,6 @@ Cache files are generated on the first run of the script. If you want these file
 - graphviz 2.38.0 (20140413.2041) (dot for creating data flow diagram)
 
 ## Hardware Requirements
-This code was designed for use on a machine with at least 64GB of RAM and 50GB of avaliable disk space.
+This code was designed for use on a machine with at least 64GB of RAM and 50GB of avaliable disk space. 3.2GB of raw data will be downloaded in the analysis.
 
 ## Licence
