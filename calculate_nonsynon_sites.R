@@ -1,7 +1,7 @@
 library("Biostrings")
 library(data.table)
 
-motif.probabilities <- readRDS("data/motif.probabilities.rds")
+motif.probabilities <- readRDS("data/motif.probabilities.by.cluster.rds")
 
 genetic.code <- c("TTT"="F", "TTC"="F", "TTA"="L", "TTG"="L",
        "TCT"="S", "TCC"="S", "TCA"="S", "TCG"="S",
@@ -83,7 +83,7 @@ codon.probability = 0
 		
 		# Convert to data table to join
 		fivemer.probability.dt <- data.table(fivemer.probability)
-		fivemer.probability.dt$project_code <- motif.probabilities[mutation==mutation.in.context,project_code]
+		fivemer.probability.dt$cluster <- motif.probabilities[mutation==mutation.in.context,cluster]
 		fivemer.probability.dt$fivemer <- fivemer
 
 	  
@@ -97,7 +97,7 @@ return(fivemer.probability.calc)
 
 fivemer.probabilities <- calculate.fivemer.probability()
 # for some reason TAA is added to end of first two column names
-names(fivemer.probabilities) <- c("nonsynon.prob","synon.prob","project_code","fivemer")
+names(fivemer.probabilities) <- c("nonsynon.prob","synon.prob","cluster","fivemer")
 
 
 print("Reading in reference genome")
