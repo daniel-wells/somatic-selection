@@ -41,6 +41,7 @@ single.base.coding.substitutions[,.N,by=consequence_type]
 single.base.coding.substitutions[,.N,by=sequencing_strategy]
 
 # Remove duplicate annotations (1mut:>1annot due to multiple transcripts)
+# Warning, 1 base can mutate to 2 different bases in same patient - use mut_id not position
 setkey(single.base.coding.substitutions,icgc_donor_id,icgc_mutation_id)
 single.base.coding.substitutions <- unique(single.base.coding.substitutions)
 
