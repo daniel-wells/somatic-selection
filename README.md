@@ -23,4 +23,7 @@ make
 - git 2.5.4
 - graphviz 2.38.0 (20140413.2041) (dot for creating data flow diagram)
 
+## Hardware Requirements
+This code was designed for use on a machine with at least 64GB of RAM and 50GB of avaliable disk space.
+
 ## Licence
