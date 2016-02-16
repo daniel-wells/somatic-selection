@@ -44,6 +44,17 @@ single.base.coding.substitutions[,.N,by=sequencing_strategy]
 setkey(single.base.coding.substitutions,icgc_donor_id,icgc_mutation_id)
 single.base.coding.substitutions <- unique(single.base.coding.substitutions)
 
+# Add cluster information
+donor.clusters <- readRDS("data/donor.clusters.rds")
+donor.clusters <- donor.clusters[,.(icgc_donor_id,cluster)]
+
+setkey(donor.clusters,icgc_donor_id)
+setkey(single.base.coding.substitutions,icgc_donor_id)
+single.base.coding.substitutions <- donor.clusters[single.base.coding.substitutions]
+
+# Assign cluster 17 to lowly mutated samples
+single.base.coding.substitutions[is.na(cluster)]$cluster <- 17
+
 # Make VRanges object
 vr = VRanges(
 	seqnames = single.base.coding.substitutions$chromosome,
