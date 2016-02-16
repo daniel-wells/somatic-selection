@@ -120,6 +120,7 @@ data/observed_variants_by_transcript.filtered.tsv: data/observed_variants_by_tra
 ####### Expected & Actual Integration
 #######
 
+# Map counted actual N and S from ICGC VCF to total possible N and S from ensembl cds fasta
 data/dNdS_by_transcript.tsv: code/calculate_dNdS.R data/observed_variants_by_transcript.filtered.tsv data/expected_variants_per_transcript.tsv
 	Rscript code/calculate_dNdS.R
 
