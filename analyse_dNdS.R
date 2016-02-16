@@ -196,7 +196,7 @@ ggplot(dNdS.by.gene, aes(x=dNdS,fill=USP17L)) + geom_density(alpha=0.3) + geom_v
 dev.off()
 
 # Top 75
-top <- dNdS.by.gene[ranking>max(ranking)-400 & uS>3,.(cancer.gene,uS,uN,dNdS,gene.name,ranking,expression.percent.rank)][order(-ranking)]
+top <- dNdS.by.gene[ranking>max(ranking)-400 & uS>3,.(cancer.gene,cancer.gene.vogelstein,uS,uN,dNdS,gene.name,ranking,expression.percent.rank)][order(-ranking)]
 
 # Save whole table
 write.table(dNdS.by.gene, paste("results/dNdS",format(Sys.time(), "%Y-%m-%d.%H-%M-%S"), "tsv", sep = "."), sep="\t",row.names=FALSE,quote=FALSE)
