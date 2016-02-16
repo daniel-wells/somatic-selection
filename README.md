@@ -21,6 +21,9 @@ Cache files are generated on the first run of the script. If you want these file
   - ggplot2 2.0.0
   - metRology 0.9-17
   - ggrepel 0.4
+  - Bioconductor
+    - SomaticSignatures
+    - BSgenome.Hsapiens.UCSC.hg19
 - GNU Make 3.81
 - git 2.5.4
 - graphviz 2.38.0 (20140413.2041) (dot for creating data flow diagram)
