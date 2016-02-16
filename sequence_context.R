@@ -42,17 +42,17 @@ single.base.coding.substitutions[,.N,by=sequencing_strategy]
 
 # Remove duplicate annotations (1mut:>1annot due to multiple transcripts)
 setkey(single.base.coding.substitutions,icgc_donor_id,icgc_mutation_id)
-ICGCraw <- unique(single.base.coding.substitutions)
+single.base.coding.substitutions <- unique(single.base.coding.substitutions)
 
 # Make VRanges object
 vr = VRanges(
-	seqnames = ICGCraw$chromosome,
-	ranges = IRanges(ICGCraw$chromosome_start,ICGCraw$chromosome_end),
-	ref = ICGCraw$reference_genome_allele,
-	alt = ICGCraw$mutated_to_allele,
-	sampleNames = ICGCraw$icgc_donor_id,
-	study = ICGCraw$project_code,
-	sequencing_strategy = ICGCraw$sequencing_strategy)
+	seqnames = single.base.coding.substitutions$chromosome,
+	ranges = IRanges(single.base.coding.substitutions$chromosome_start,single.base.coding.substitutions$chromosome_end),
+	ref = single.base.coding.substitutions$reference_genome_allele,
+	alt = single.base.coding.substitutions$mutated_to_allele,
+	sampleNames = single.base.coding.substitutions$icgc_donor_id,
+	study = single.base.coding.substitutions$project_code,
+	sequencing_strategy = single.base.coding.substitutions$sequencing_strategy)
 
 # add "chr" to work with UCSC.hg19
 vr <- ucsc(vr)
@@ -91,9 +91,9 @@ if (file.exists("data/coding.trimer.counts.rds")){
 }
 
 # number of donors per project
-setkey(ICGCraw,icgc_donor_id)
-ICGCdonors <- unique(ICGCraw)
 donor.count <- ICGCdonors[,.("donor.count"=.N),by=project_code][order(donor.count)]
+setkey(single.base.coding.substitutions,icgc_donor_id)
+ICGCdonors <- unique(single.base.coding.substitutions)
 
 CJ.dt = function(X,Y) {
   stopifnot(is.data.table(X),is.data.table(Y))
@@ -129,7 +129,7 @@ motif.probabilities$mutation.probability <- motif.probabilities$mutation_count /
 
 
 # number of somatic coding mutations per donor
-hist(ICGCraw[,.N,by=icgc_donor_id][order(N)]$N,breaks=3000,xlim=c(0,500))
+hist(single.base.coding.substitutions[,.N,by=icgc_donor_id][order(N)]$N,breaks=3000,xlim=c(0,500))
 dev.off()
 
 w_df = melt(motif.matrix.count, varnames = c("motif", "sample"))
