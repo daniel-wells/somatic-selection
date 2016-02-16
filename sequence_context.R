@@ -23,16 +23,26 @@ if (file.exists("data/single.base.coding.substitutions.rds")){
 	read.and.filter <- function(x) {
 	print(paste("Reading file:",x))
 	data <- fread(x)
-	# all single base pair, exonic mutations
-	data <- data[mutation_type=="single base substitution" & consequence_type %in% c("missense_variant", "synonymous_variant", "frameshift_variant","disruptive_inframe_deletion","disruptive_inframe_insertion","inframe_deletion","inframe_insertion","start_lost","stop_lost","stop_gained")]
+	# all mutations, remove unused columns (~15% original size)
+	data <-  data[,.(icgc_mutation_id,icgc_donor_id,project_code,chromosome,chromosome_start,chromosome_end,chromosome_strand,mutation_type,reference_genome_allele,mutated_from_allele,mutated_to_allele,consequence_type,aa_mutation,cds_mutation,gene_affected,transcript_affected,sequencing_strategy)]
 	return(data)
 	}
 
 	# Load tsv mutations
-	single.base.coding.substitutions <- rbindlist(lapply(paste('zcat < ',file_list), read.and.filter))
+	mutations <- rbindlist(lapply(paste('zcat < ',file_list), read.and.filter))
 
-	# Save object
-	saveRDS(single.base.coding.substitutions, "data/single.base.coding.substitutions.rds")
+	# Set catagoricals as factors (saves 4GB)
+	mutations[, c("project_code","chromosome","chromosome_strand","mutation_type","consequence_type","sequencing_strategy","gene_affected","transcript_affected","icgc_donor_id") := lapply(mutations[,c("project_code","chromosome","chromosome_strand","mutation_type","consequence_type","sequencing_strategy","gene_affected","transcript_affected","icgc_donor_id"),with=FALSE],as.factor),with=FALSE]
+
+	# Save all mutations as cache
+	saveRDS(mutations,"data/simple.somatic.mutations.aggregated.rds",compress = FALSE)
+	
+	# Save single base coding substitutions
+	single.base.coding.substitutions <- mutations[mutation_type=="single base substitution" & consequence_type %in% c("missense_variant", "synonymous_variant", "frameshift_variant","disruptive_inframe_deletion","disruptive_inframe_insertion","inframe_deletion","inframe_insertion","start_lost","stop_lost","stop_gained")]
+	#4,649,834
+
+	# Save single base, coding mutations
+	saveRDS(single.base.coding.substitutions,"data/single.base.coding.substitutions.rds",compress = FALSE)
 }
 
 single.base.coding.substitutions[,.N,by=project_code]
@@ -41,18 +51,19 @@ single.base.coding.substitutions[,.N,by=consequence_type]
 single.base.coding.substitutions[,.N,by=sequencing_strategy]
 
 # Remove duplicate annotations (1mut:>1annot due to multiple transcripts)
+# Warning, 1 base can mutate to 2 different bases in same patient - use mut_id not position
 setkey(single.base.coding.substitutions,icgc_donor_id,icgc_mutation_id)
-ICGCraw <- unique(single.base.coding.substitutions)
+single.base.coding.substitutions <- unique(single.base.coding.substitutions)
 
 # Make VRanges object
 vr = VRanges(
-	seqnames = ICGCraw$chromosome,
-	ranges = IRanges(ICGCraw$chromosome_start,ICGCraw$chromosome_end),
-	ref = ICGCraw$reference_genome_allele,
-	alt = ICGCraw$mutated_to_allele,
-	sampleNames = ICGCraw$icgc_donor_id,
-	study = ICGCraw$project_code,
-	sequencing_strategy = ICGCraw$sequencing_strategy)
+	seqnames = single.base.coding.substitutions$chromosome,
+	ranges = IRanges(single.base.coding.substitutions$chromosome_start,single.base.coding.substitutions$chromosome_end),
+	ref = single.base.coding.substitutions$reference_genome_allele,
+	alt = single.base.coding.substitutions$mutated_to_allele,
+	sampleNames = single.base.coding.substitutions$icgc_donor_id,
+	study = single.base.coding.substitutions$project_code,
+	sequencing_strategy = single.base.coding.substitutions$sequencing_strategy)
 
 # add "chr" to work with UCSC.hg19
 vr <- ucsc(vr)
@@ -91,9 +102,9 @@ if (file.exists("data/coding.trimer.counts.rds")){
 }
 
 # number of donors per project
-setkey(ICGCraw,icgc_donor_id)
-ICGCdonors <- unique(ICGCraw)
 donor.count <- ICGCdonors[,.("donor.count"=.N),by=project_code][order(donor.count)]
+setkey(single.base.coding.substitutions,icgc_donor_id)
+ICGCdonors <- unique(single.base.coding.substitutions)
 
 CJ.dt = function(X,Y) {
   stopifnot(is.data.table(X),is.data.table(Y))
@@ -129,7 +140,7 @@ motif.probabilities$mutation.probability <- motif.probabilities$mutation_count /
 
 
 # number of somatic coding mutations per donor
-hist(ICGCraw[,.N,by=icgc_donor_id][order(N)]$N,breaks=3000,xlim=c(0,500))
+hist(single.base.coding.substitutions[,.N,by=icgc_donor_id][order(N)]$N,breaks=3000,xlim=c(0,500))
 dev.off()
 
 w_df = melt(motif.matrix.count, varnames = c("motif", "sample"))

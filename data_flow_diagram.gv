@@ -6,7 +6,8 @@ digraph dfd2{
         subgraph level0{
         enti1 [label="Fasta | Ensembl", style=filled, fillcolor=yellow];
         enti2 [label="VFC | ICGC aggregated", style=filled, fillcolor=yellow];
-                        {rank=same; enti1, enti2}
+        enti6 [label="TSV | ICGC Project SSM", style=filled, fillcolor=yellow];
+                        {rank=same; enti1, enti2, enti6}
 
         enti5 [label="expected_variants_per_transcript.tsv" shape=box, style=filled, fillcolor=lightblue];
         enti8 [label="observed_variants_by_transcript.tsv" shape=box, style=filled, fillcolor=lightblue];
@@ -15,6 +16,10 @@ digraph dfd2{
         enti11 [label="Graphs.pdf" shape=box, style=filled, fillcolor=green];
         enti14 [label="simple_somatic_mutation.aggregated.filtered.vcf" shape=box, style=filled, fillcolor=lightblue];
         enti15 [label="observed_variants_by_transcript.filtered.tsv" shape=box, style=filled, fillcolor=lightblue];
+        enti16 [label="single.base.coding.substitutions.rds" shape=box, style=filled, fillcolor=pink];
+        enti17 [label="coding.trimer.counts.rds" shape=box, style=filled, fillcolor=pink];
+        enti18 [label="motif.probabilities.rds" shape=box, style=filled, fillcolor=lightblue];
+        enti19 [label="simple.somatic.mutations.aggregated.rds" shape=box, style=filled, fillcolor=pink];
 
         proc1 [label="calculate_nonsynon_sites.R}" shape=Mrecord];
         proc3 [label="calculate_dNdS.R}" shape=Mrecord];
@@ -23,6 +28,7 @@ digraph dfd2{
         proc8 [label="{dNdS.sh|Download Raw Data}" shape=Mrecord];
         proc9 [label="{dNdS.sh|Filter}" shape=Mrecord];
         proc10 [label="{dNdS.sh|Filter}" shape=Mrecord];
+        proc11 [label="{sequence_context.R}" shape=Mrecord];
         }
 
        subgraph cluster_level1{
@@ -46,13 +52,18 @@ digraph dfd2{
 	subgraph cluster_level2{
                         label ="Key" fontsize="25" rank="min";
         		raw [label="Raw Data" shape=box, style=filled, fillcolor=yellow];
-			data [label="Intermediate Data" shape=box, style=filled, fillcolor=lightblue];
-		       results [label="Result" shape=box, style=filled, fillcolor=green];
+		data [label="Intermediate Data" shape=box, style=filled, fillcolor=lightblue];
+		cachedata [label="Cached Data" shape=box, style=filled, fillcolor=pink];
+	       results [label="Result" shape=box, style=filled, fillcolor=green];
 	        	script [label="Script" shape=Mrecord];
         }
 
 	# Download Data
-	proc8 -> {enti1, enti2,enti3,enti4,enti12}
+	proc8 -> {enti1, enti2, enti3, enti4, enti12, enti6}
+	
+	enti6 -> proc11
+	proc11 -> {enti16,enti17,enti18,enti19}
+	enti18 -> proc1
 	
 	# Ensembl Fasta
 	enti1 -> proc1 -> enti5 -> proc3
