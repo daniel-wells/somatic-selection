@@ -19,6 +19,7 @@ digraph dfd2{
         enti16 [label="single.base.coding.substitutions.rds" shape=box, style=filled, fillcolor=pink];
         enti17 [label="coding.trimer.counts.rds" shape=box, style=filled, fillcolor=pink];
         enti18 [label="motif.probabilities.rds" shape=box, style=filled, fillcolor=lightblue];
+        enti19 [label="simple.somatic.mutations.aggregated.rds" shape=box, style=filled, fillcolor=pink];
 
         proc1 [label="calculate_nonsynon_sites.R}" shape=Mrecord];
         proc3 [label="calculate_dNdS.R}" shape=Mrecord];
@@ -61,7 +62,7 @@ digraph dfd2{
 	proc8 -> {enti1, enti2, enti3, enti4, enti12, enti6}
 	
 	enti6 -> proc11
-	proc11 -> {enti16,enti17,enti18}
+	proc11 -> {enti16,enti17,enti18,enti19}
 	enti18 -> proc1
 	
 	# Ensembl Fasta
