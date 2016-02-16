@@ -12,6 +12,8 @@ make
 ## Data Flow Diagram
 ![Data Flow Diagram](data_flow_diagram.png)
 
+Cache files are generated on the first run of the script. If you want these files to be remade, rename / move / delete the current file. Make will not automatically remake the cache files.
+
 ## Dependencies
 - Python 2.6.6 (r266:84292)
 - R 3.2.2
