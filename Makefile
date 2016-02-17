@@ -15,7 +15,7 @@ data/raw/ICGC_projects.tsv:
 
 data/url-list.txt: data/raw/ICGC_projects.tsv
 	for OUTPUT in $$(cut -f 1,7 data/raw/ICGC_projects.tsv | grep -Pv '(\t0|Project)' | cut -f 1) ; do \
-		echo "https://dcc.icgc.org/api/v1/download?fn=/release_20/Projects/$$OUTPUT/simple_somatic_mutation.open.$$OUTPUT.tsv.gz" >> url-list.txt \ ; \
+		echo "https://dcc.icgc.org/api/v1/download?fn=/release_20/Projects/$$OUTPUT/simple_somatic_mutation.open.$$OUTPUT.tsv.gz" >> data/url-list.txt \ ; \
 	done
 
 URLS=$(shell awk '{printf "%s\n", $$1}' data/url-list.txt)
@@ -28,6 +28,7 @@ $(ICGC_project_mutation_files): data/url-list.txt
 	mkdir -p $(dir $@)
 	wget "$(filter $(addprefix %/,$(notdir $@)),$(URLS))" -O $@
 	# 2.6G in total
+	#? find data/raw/ICGC -name "simple_somatic_mutation.open.*.tsv.gz" -exec touch {} \;
 
 data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz:
 	# Download ensembl cds nt sequence - referenced as ftp://ftp.ensembl.org/pub/release-75/mysql/homo_sapiens_core_75_37/ at https://docs.icgc.org/methods
