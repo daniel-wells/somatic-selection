@@ -12,8 +12,8 @@ sink(logfile, type="message")
 # install.packages('metRology')
 
 library(data.table)
-cds <- fread("data/dNdS_by_transcript.2016-02-10.12-27-58.tsv", header=TRUE)
-print(paste(nrow(cds),"transcripts dNdS values loaded.",))
+cds <- fread("data/dNdS_by_transcript.2016-02-11.17-59-16.tsv", header=TRUE)
+print(paste(nrow(cds),"transcripts dNdS values loaded."))
 
 setnames(cds,"gene.id","gene")
 setnames(cds,"cds.length","cds_length")
@@ -83,7 +83,7 @@ dNdS.by.gene$classification <- cancer.genes.vogelstein[dNdS.by.gene,classificati
 
 
 # Add expression data
-RNAseq <- fread("results/RNAseq.by.gene.2016-01-26.14-26-42.tsv", header=TRUE)
+RNAseq <- fread("data/RNAseq.by.gene.tsv", header=TRUE)
 setnames(RNAseq,c("gene.name","mean.expression","mean.of.stdev.of.expression","expression.ranking","expression.percent.rank","log10.expression"))
 setkey(RNAseq,gene.name)
 
