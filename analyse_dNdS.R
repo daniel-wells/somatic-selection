@@ -1,3 +1,4 @@
+source("code/functions.R")
 # Start writing to an output file
 logfile <- file(paste("results/analyse_dNdS.log",format(Sys.time(), "%Y-%m-%d.%H-%M-%S"), "txt", sep = "."))
 sink(logfile)
@@ -110,8 +111,8 @@ dNdS.by.gene[uS>3 & uN>3,ranking.4:=rank(dNdS,ties.method="first")]
 
 library(ggplot2)
 library(ggrepel)
-
-pdf(paste("results/results",format(Sys.time(), "%Y-%m-%d.%H-%M-%S"), "pdf", sep = "."), width=16, height=9, onefile = TRUE)
+archive.file("results/results.pdf")
+pdf("results/results.pdf", width=16, height=9, onefile = TRUE)
 
 # S Histogram (Background mutation rate power)
 ggplot(dNdS.by.gene, aes(uS)) + geom_histogram(binwidth = 1) + scale_x_continuous(limits = c(0, 100)) + labs(x="mean synonymous mutations per gene",title="Distribution of S per gene")
@@ -198,13 +199,18 @@ dev.off()
 # Top 75
 top <- dNdS.by.gene[ranking>max(ranking)-400 & uS>3,.(cancer.gene,cancer.gene.vogelstein,uS,uN,dNdS,gene.name,ranking,expression.percent.rank)][order(-ranking)]
 
+
 # Save whole table
-write.table(dNdS.by.gene, paste("results/dNdS",format(Sys.time(), "%Y-%m-%d.%H-%M-%S"), "tsv", sep = "."), sep="\t",row.names=FALSE,quote=FALSE)
+archive.file("results/dNdS.tsv")
+write.table(dNdS.by.gene, "results/dNdS.tsv", sep="\t",row.names=FALSE,quote=FALSE)
 
 # Export top and bottom 25 hits to tsv file
-write.table(top, paste("results/top_dNdS",format(Sys.time(), "%Y-%m-%d.%H-%M-%S"), "tsv", sep = "."), sep="\t",row.names=FALSE,quote=FALSE)
-write.table(bottom, paste("results/bottom_dNdS",format(Sys.time(), "%Y-%m-%d.%H-%M-%S"), "tsv", sep = "."), sep="\t",row.names=FALSE,quote=FALSE)
-write.table(USP17L, paste("results/USP17L",format(Sys.time(), "%Y-%m-%d.%H-%M-%S"), "tsv", sep = "."), sep="\t",row.names=FALSE,quote=FALSE)
+archive.file("results/top_dNdS.tsv")
+write.table(top, "results/top_dNdS.tsv", sep="\t",row.names=FALSE,quote=FALSE)
+archive.file("results/bottom_dNdS.tsv")
+write.table(bottom, "results/bottom_dNdS.tsv", sep="\t",row.names=FALSE,quote=FALSE)
+archive.file("results/USP17L.tsv")
+write.table(USP17L, "results/USP17L.tsv", sep="\t",row.names=FALSE,quote=FALSE)
 
 sessionInfo()
 
