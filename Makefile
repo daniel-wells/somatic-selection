@@ -9,9 +9,25 @@ print-%  : ; @echo $* = $($*)
 ####### Download Raw Data #######
 #################################
 
-ICGC_project_mutation_files=$(wildcard data/raw/ICGC/simple_somatic_mutation.open.*.tsv.gz)
+data/raw/ICGC_projects.tsv:
+	# Manual Download list of projects -O data/raw/ICGC_projects.tsv
+	echo https://dcc.icgc.org/projects/details https://dcc.icgc.org/78e07ae9-2c8c-4511-a2b0-77c71475688d
+
+data/url-list.txt: data/raw/ICGC_projects.tsv
+	for OUTPUT in $$(cut -f 1,7 data/raw/ICGC_projects.tsv | grep -Pv '(\t0|Project)' | cut -f 1) ; do \
+		echo "https://dcc.icgc.org/api/v1/download?fn=/release_20/Projects/$$OUTPUT/simple_somatic_mutation.open.$$OUTPUT.tsv.gz" >> url-list.txt \ ; \
+	done
+
+URLS=$(shell awk '{printf "%s\n", $$1}' data/url-list.txt)
+
+ICGC_project_mutation_files=$(addprefix data/raw/ICGC/,$(notdir $(URLS)))
 
 raw_data: data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz data/raw/mart_export.txt.gz data/raw/simple_somatic_mutation.aggregated.vcf.gz $(ICGC_project_mutation_files) data/raw/cancer_gene_census.csv data/raw/vogelstein_driver_genes.tdv data/raw/ICGC_projects.tsv
+
+$(ICGC_project_mutation_files): data/url-list.txt
+	mkdir -p $(dir $@)
+	wget "$(filter $(addprefix %/,$(notdir $@)),$(URLS))" -O $@
+	# 2.6G in total
 
 data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz:
 	# Download ensembl cds nt sequence - referenced as ftp://ftp.ensembl.org/pub/release-75/mysql/homo_sapiens_core_75_37/ at https://docs.icgc.org/methods
@@ -35,19 +51,6 @@ data/raw/mart_export.txt.gz:
 	# Requires manual download
 	http://www.ensembl.org/biomart/martview/a9103936cd932b57917528550c7c9a2b?VIRTUALSCHEMANAME=default&ATTRIBUTES=hsapiens_gene_ensembl.default.feature_page.external_gene_name|hsapiens_gene_ensembl.default.feature_page.gene_biotype|hsapiens_gene_ensembl.default.feature_page.transcript_biotype|hsapiens_gene_ensembl.default.feature_page.ensembl_gene_id|hsapiens_gene_ensembl.default.feature_page.ensembl_transcript_id&FILTERS=&VISIBLEPANEL=resultspanel
 	sha256sum data/raw/mart_export.txt.gz >> data/raw/SHA256SUMS
-
-data/raw/ICGC_projects.tsv:
-	# Manual Download list of projects -O data/raw/ICGC_projects.tsv
-	https://dcc.icgc.org/78e07ae9-2c8c-4511-a2b0-77c71475688d
-
-$(ICGC_project_mutation_files): data/raw/ICGC_projects.tsv
-	# Download each project (which has somatic mutation data)
-	for OUTPUT in $(cut -f 1,7 data/raw/ICGC_projects.tsv | grep -Pv '(\t0|Project)' | cut -f 1)
-	do
-		echo $OUTPUT
-		wget https://dcc.icgc.org/api/v1/download?fn=/release_20/Projects/$OUTPUT/simple_somatic_mutation.open.$OUTPUT.tsv.gz -O data/raw/ICGC/simple_somatic_mutation.open.$OUTPUT.tsv.gz
-	done
-	# 2.6G in total
 
 data/raw/cancer_gene_census.csv:
 	# Download cancer gene census for annotation in analysis
