@@ -12,7 +12,7 @@ sink(logfile, type="message")
 # install.packages('metRology')
 
 library(data.table)
-cds <- fread("data/dNdS_by_transcript.2016-02-11.17-59-16.tsv", header=TRUE)
+cds <- fread("data/dNdS_by_transcript.tsv", header=TRUE)
 print(paste(nrow(cds),"transcripts dNdS values loaded."))
 
 setnames(cds,"gene.id","gene")
