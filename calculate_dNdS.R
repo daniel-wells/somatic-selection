@@ -34,15 +34,6 @@ print(paste(nrow(counts[is.na(N) & is.na(S),]),"transcripts with both nonsynon a
 counts$N[is.na(counts$N)] <- 0
 counts$S[is.na(counts$S)] <- 0
 
-# Get gene name by transcript
-transcript.gene <- unique(observed_variants[variant.class!="exon_variant",gene.name, by=transcript.id])
-setkey(transcript.gene, transcript.id)
-
-# All rows in transcript.gene + rows that match from counts - should have equal length 81,312
-named.counts <- counts[transcript.gene,]
-setkey(named.counts, transcript.id)
-
-
 expected_variants <- fread("data/expected_variants_per_transcript.tsv", header=TRUE)
 setkey(expected_variants, transcript.id)
 
@@ -60,8 +51,8 @@ expected_variants <- expected_variants[Transcript.type=="protein_coding",]
 
 print(paste(nrow(expected_variants),"expected variants per transcript after filtering"))
 
-# All rows in named.counts with rows from expected_variants which match
-expected_variants <- expected_variants[named.counts,nomatch=0]
+# All rows in counts with rows from expected_variants which match
+expected_variants <- expected_variants[counts,nomatch=0]
 # some transcripts with observed variations do not have calculated nonsynon sites due to N or not multiple of 3, generating NA in e.g. chromosome column as these transcripts were not passed through to N per transcript. Inner Join
 print(paste(nrow(expected_variants),"expected variants per transcript with measured actual variants"))
 
@@ -84,4 +75,5 @@ expected_variants <- expected_variants[is.na(dNdS)==FALSE & is.finite(dNdS)==TRU
 sessionInfo()
 
 write.table(expected_variants,paste("data/dNdS_by_transcript",format(Sys.time(), "%Y-%m-%d.%H-%M-%S"), "tsv", sep = ".") , sep="\t",row.names=FALSE,quote=FALSE)sink(type="message")
+sink(type="message")
 sink()
