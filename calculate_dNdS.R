@@ -34,11 +34,13 @@ print(paste(nrow(counts[is.na(N) & is.na(S),]),"transcripts with both nonsynon a
 counts$N[is.na(counts$N)] <- 0
 counts$S[is.na(counts$S)] <- 0
 
+# Load expected variants per transcript
 expected_variants <- fread("data/expected_variants_per_transcript.tsv", header=TRUE)
 setkey(expected_variants, transcript.id)
 
 print(paste(nrow(expected_variants),"expected variants per transcript loaded"))
 
+# Add annotations from GRCh38
 updated.annotations <- fread(input = 'zcat < data/raw/mart_export.txt.gz')
 setnames(updated.annotations, make.names(names(updated.annotations)))
 setkey(updated.annotations, "Ensembl.Transcript.ID")
