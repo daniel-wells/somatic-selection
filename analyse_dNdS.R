@@ -16,6 +16,7 @@ cds <- fread("data/dNdS_by_transcript.tsv", header=TRUE)
 print(paste(nrow(cds),"transcripts dNdS values loaded."))
 
 setnames(cds,"gene.id","gene")
+setnames(cds,"Associated.Gene.Name","gene.name")
 setnames(cds,"cds.length","cds_length")
 
 print(paste(nrow(cds[is.infinite(dNdS)]),"transcipts with infinite dNdS values removed: (only those with N>15 shown)"))
