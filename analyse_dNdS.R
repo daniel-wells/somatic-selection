@@ -1,6 +1,6 @@
 source("code/functions.R")
 # Start writing to an output file
-logfile <- file(paste("results/analyse_dNdS.log",format(Sys.time(), "%Y-%m-%d.%H-%M-%S"), "txt", sep = "."))
+logfile <- file(paste("logs/analyse_dNdS.R.log",format(Sys.time(), "%Y-%m-%d.%H-%M-%S"), "txt", sep = "."))
 sink(logfile)
 sink(logfile, type="message")
 # module load apps/R/3.2.2/gcc-4.4.7+lapack-3.5.0+blas-20110419
