@@ -76,6 +76,5 @@ write.table(expected_variants, "data/dNdS_by_transcript.tsv", sep="\t", row.name
 
 sessionInfo()
 
-write.table(expected_variants,paste("data/dNdS_by_transcript",format(Sys.time(), "%Y-%m-%d.%H-%M-%S"), "tsv", sep = ".") , sep="\t",row.names=FALSE,quote=FALSE)sink(type="message")
 sink(type="message")
 sink()
