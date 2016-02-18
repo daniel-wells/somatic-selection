@@ -18,6 +18,9 @@ print(paste(nrow(cds),"transcripts dNdS values loaded."))
 setnames(cds,"gene.id","gene")
 setnames(cds,"cds.length","cds_length")
 
+print(paste(nrow(cds[is.infinite(dNdS)]),"transcipts with infinite dNdS values removed: (only those with N>15 shown)"))
+cds[is.infinite(dNdS) & N>15,.(gene.name,gene,Ensembl.Transcript.ID,nonsynon.probability,synon.probability,cds_length,S,N)]
+
 # For each gene, find max cds length
 max.cds.by.gene <- unique(cds[is.finite(dNdS),.(max.cds = max(cds_length,na.rm=TRUE)),by=gene])
 
