@@ -67,13 +67,13 @@ print(paste(nrow(expected_variants[S==0 & N==0]),"transcripts have S and N ==0")
 print(paste(nrow(expected_variants[is.na(dS)]),"transcripts have dS as NaN generating a dNdS of NaN:"))
 expected_variants[synon.probability==0 | nonsynon.probability==0]
 
+# Remove dNdS NA, NaN
+expected_variants <- expected_variants[is.na(dNdS)==FALSE,]
 print(paste(nrow(expected_variants),"transcripts to be written to file"))
 
 archive.file("data/dNdS_by_transcript.tsv")
 write.table(expected_variants, "data/dNdS_by_transcript.tsv", sep="\t", row.names=FALSE, quote=FALSE)
 
-# Remove dNdS NA, NaN and Infinite rows
-expected_variants <- expected_variants[is.na(dNdS)==FALSE & is.finite(dNdS)==TRUE,]
 sessionInfo()
 
 write.table(expected_variants,paste("data/dNdS_by_transcript",format(Sys.time(), "%Y-%m-%d.%H-%M-%S"), "tsv", sep = ".") , sep="\t",row.names=FALSE,quote=FALSE)sink(type="message")
