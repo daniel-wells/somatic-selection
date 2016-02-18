@@ -69,6 +69,8 @@ expected_variants[synon.probability==0 | nonsynon.probability==0]
 
 print(paste(nrow(expected_variants),"transcripts to be written to file"))
 
+archive.file("data/dNdS_by_transcript.tsv")
+write.table(expected_variants, "data/dNdS_by_transcript.tsv", sep="\t", row.names=FALSE, quote=FALSE)
 
 # Remove dNdS NA, NaN and Infinite rows
 expected_variants <- expected_variants[is.na(dNdS)==FALSE & is.finite(dNdS)==TRUE,]
