@@ -188,7 +188,7 @@ ggplot(dNdS.by.gene[uS>3], aes(x=ranking,y=dNdS)) + geom_point(aes(colour = canc
 
 
 # Bottom 25
-bottom <- dNdS.by.gene[ranking<100 & uS>3,.(cancer.gene,uS,uN,dNdS,gene.name,ranking,expression.percent.rank)][order(ranking)]
+bottom <- dNdS.by.gene[is.finite(Log.dNdS) & Log.dNdS<low.conf(uS),.(cancer.gene,uS,uN,dNdS,gene.name,ranking,expression.percent.rank)][order(ranking)]
 
 # Get all USP17L genes with uS>3
 USP17L <- dNdS.by.gene[grep("USP17",dNdS.by.gene$gene.name),.(gene.name,chromosome,uS,uN,ranking,dNdS,Log.dNdS,expression.percent.rank)][uS>3][order(ranking)]
@@ -200,9 +200,8 @@ ggplot(dNdS.by.gene, aes(x=dNdS,fill=USP17L)) + geom_density(alpha=0.3) + geom_v
 
 dev.off()
 
-# Top 75
-top <- dNdS.by.gene[ranking>max(ranking)-400 & uS>3,.(cancer.gene,cancer.gene.vogelstein,uS,uN,dNdS,gene.name,ranking,expression.percent.rank)][order(-ranking)]
-
+# Top ~65
+top <- dNdS.by.gene[Log.dNdS>up.conf(uS),.(cancer.gene,cancer.gene.vogelstein,uS,uN,dNdS,gene.name,ranking,expression.percent.rank)][order(-ranking)]
 
 # Save whole table
 archive.file("results/dNdS.tsv")
