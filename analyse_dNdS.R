@@ -138,13 +138,13 @@ ggplot(dNdS.by.gene, aes(ranking.3, dS)) + geom_point(alpha=0.3) + geom_smooth()
 
 # Funnel plot (uS by dNdS)
 # with uS as 'study size' (size approximating power which is background mutation rate, more than just cds_length)
-up.conf <- function(x) {(5/(x+3))+0.02}
-up.conf.l <- function(x) {(5/(x+3))+0.1}
+up.conf <- function(x) {(5/(x+3))+0.1}
+up.conf.l <- function(x) {(5/(x+3))+0.12}
 
 low.conf <- function(x) {(-7/(x+2))-0.3}
-low.conf.l <- function(x) {(-7/(x+2))-0.4}
+low.conf.l <- function(x) {(-7/(x+2))-0.3}
 
-ggplot(dNdS.by.gene[is.finite(Log.dNdS)], aes(uS,Log.dNdS)) + geom_point(aes(colour = cancer.gene),alpha=0.3) + xlim(0,280) + ylim(-1.6,+1.6) + scale_colour_manual(name="In COSMIC cancer gene census?",  values =c("black", "red")) + theme(legend.position="bottom") + stat_function(fun = up.conf)+ stat_function(fun = low.conf) + geom_label_repel(data = dNdS.by.gene[is.finite(Log.dNdS)][Log.dNdS<low.conf.l(uS) | Log.dNdS>up.conf.l(uS)], aes(label = gene.name), size = 2, box.padding = unit(0.5, "lines"), point.padding = unit(0.1, "lines"), force=1,segment.size=0.2)
+ggplot(dNdS.by.gene[is.finite(Log.dNdS)], aes(uS,Log.dNdS)) + geom_point(aes(colour = cancer.gene),alpha=0.3) + xlim(0,280) + ylim(-1.6,+1.6) + scale_colour_manual(name="In COSMIC cancer gene census?",  values =c("black", "red")) + theme(legend.position="bottom") + stat_function(fun = up.conf)+ stat_function(fun = low.conf) + geom_label_repel(data = dNdS.by.gene[is.finite(Log.dNdS)][Log.dNdS<low.conf.l(uS) | Log.dNdS>up.conf.l(uS)], aes(label = gene.name), size = 2, box.padding = unit(0.5, "lines"), point.padding = unit(0.1, "lines"), force=1,segment.size=0.2,segment.color="blue")
 
 print(paste("Total Vogelstein cancer genes:",sum(dNdS.by.gene$cancer.gene.vogelstein)))
 print(paste("Vogelstein cancer genes in top reigon:",sum(dNdS.by.gene[Log.dNdS>up.conf(uS)]$cancer.gene.vogelstein)))
@@ -188,7 +188,7 @@ ggplot(dNdS.by.gene[uS>3], aes(x=ranking,y=dNdS)) + geom_point(aes(colour = canc
 
 
 # Bottom 25
-bottom <- dNdS.by.gene[ranking<100 & uS>3,.(cancer.gene,uS,uN,dNdS,gene.name,ranking,expression.percent.rank)][order(ranking)]
+bottom <- dNdS.by.gene[is.finite(Log.dNdS) & Log.dNdS<low.conf(uS),.(cancer.gene,uS,uN,dNdS,gene.name,ranking,expression.percent.rank)][order(ranking)]
 
 # Get all USP17L genes with uS>3
 USP17L <- dNdS.by.gene[grep("USP17",dNdS.by.gene$gene.name),.(gene.name,chromosome,uS,uN,ranking,dNdS,Log.dNdS,expression.percent.rank)][uS>3][order(ranking)]
@@ -200,9 +200,8 @@ ggplot(dNdS.by.gene, aes(x=dNdS,fill=USP17L)) + geom_density(alpha=0.3) + geom_v
 
 dev.off()
 
-# Top 75
-top <- dNdS.by.gene[ranking>max(ranking)-400 & uS>3,.(cancer.gene,cancer.gene.vogelstein,uS,uN,dNdS,gene.name,ranking,expression.percent.rank)][order(-ranking)]
-
+# Top ~65
+top <- dNdS.by.gene[Log.dNdS>up.conf(uS),.(cancer.gene,cancer.gene.vogelstein,uS,uN,dNdS,gene.name,ranking,expression.percent.rank)][order(-ranking)]
 
 # Save whole table
 archive.file("results/dNdS.tsv")

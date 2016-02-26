@@ -101,7 +101,7 @@ names(fivemer.probabilities) <- c("nonsynon.prob","synon.prob","project_code","f
 
 
 print("Reading in reference genome")
-fasta <- readDNAStringSet("/mnt/lustre/users/dwells/data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz")
+fasta <- readDNAStringSet("data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz")
 
 # Which sequences are not multiple of 3
 multiple.of.3 <- width(fasta) %% 3L == 0L
