@@ -46,9 +46,9 @@ vr_context <- mutationContext(vr, genome)
 motif.matrix.count = motifMatrix(vr_context, group = "study", normalize = FALSE)
 
 # number of donors per project
-donor.count <- ICGCdonors[,.("donor.count"=.N),by=project_code][order(donor.count)]
 setkey(single.base.coding.substitutions,icgc_donor_id)
 ICGCdonors <- unique(single.base.coding.substitutions)
+donor.count <- ICGCdonors[,.("donor.count"=.N),by=project_code][order(donor.count)]
 
 CJ.dt = function(X,Y) {
   stopifnot(is.data.table(X),is.data.table(Y))
@@ -76,7 +76,7 @@ motif.probabilities$mutation <- as.character(motif.probabilities$mutation)
 motif.probabilities$base_motif <- subseq(motif.probabilities$mutation, 4, 6)
 subseq(motif.probabilities$base_motif, 2, 2) <- subseq(motif.probabilities$mutation, 1, 1)
 
-# all rows in motif matrix with timer counts added
+# all rows in motif probabilities with timer counts added
 setkey(trimer.count.by.project,project_code,base_motif)
 setkey(motif.probabilities,project_code,base_motif)
 motif.probabilities <- trimer.count.by.project[motif.probabilities]
