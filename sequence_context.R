@@ -15,6 +15,8 @@ genome <- BSgenome.Hsapiens.UCSC.hg19
 ### LOAD ICGC MUTATION DATA ###
 single.base.coding.substitutions <- readRDS("data/single.base.coding.substitutions.rds")
 
+### CONTEXTUALISE MUTATIONS & CALCULATE MUTATION PROFILE & PROBAILITIES ###
+
 single.base.coding.substitutions[,.N,by=project_code]
 single.base.coding.substitutions[,.N,by=mutation_type]
 single.base.coding.substitutions[,.N,by=consequence_type]
@@ -43,34 +45,6 @@ vr_context <- mutationContext(vr, genome)
 
 motif.matrix.count = motifMatrix(vr_context, group = "study", normalize = FALSE)
 
-if (file.exists("data/coding.trimer.counts.rds")){
-	coding.trimer.counts <- readRDS("data/coding.trimer.counts.rds")
-}else{
-	# Extract trinucleotide frequency
-	library(TxDb.Hsapiens.UCSC.hg19.knownGene)
-	cds = keepStandardChromosomes(reduce(cds(TxDb.Hsapiens.UCSC.hg19.knownGene)))
-
-	k = 3
-	n = 1e6
-	k3_cds = kmerFrequency(genome, n, k, cds)
-
-	# Modified from SomaticSignatures/R/normalize.R
-	s = BStringSet(rownames(motif.matrix.count))
-	base_motif = subseq(s, 4, 6)
-	subseq(base_motif, 2, 2) = subseq(s, 1, 1)
-	bs = as(base_motif, "character")
-	all(bs %in% names(k3_cds))
-	names(k3_cds[!names(k3_cds) %in% bs])
-	unique(bs) #32!
-	idx = match(bs, names(k3_cds))
-	# Modified here *2 so total frequency is 3 (as only 6/12 trinucleotides represented in mutation profile, and each is represented 3 times to make 96)
-	sss = 2 * as.vector(k3_cds[idx])
-	sum(sss) # =3
-	coding.trimer.counts = unique(sss * sum(width(cds)))  # 35,226,001 - 35Mbp coding exome length
-	names(coding.trimer.counts) <- unique(bs)
-	saveRDS(coding.trimer.counts, "data/coding.trimer.counts.rds")	
-}
-
 # number of donors per project
 donor.count <- ICGCdonors[,.("donor.count"=.N),by=project_code][order(donor.count)]
 setkey(single.base.coding.substitutions,icgc_donor_id)
@@ -86,9 +60,10 @@ CJ.dt = function(X,Y) {
   X[Y, allow.cartesian=TRUE][, k := NULL][]
 }
 
+coding.trimer.counts <- readRDS("data/coding.trimer.counts.rds")
 
-# Convert coding.trimer.counts to data table and cross join with donor counts
-trimer.count.by.project <- CJ.dt(data.table("base_motif"=names(coding.trimer.counts),coding.trimer.counts),donor.count)
+# cross join with donor counts
+trimer.count.by.project <- CJ.dt(coding.trimer.counts,donor.count)
 # overall counts of trinucleotides over all donors in a project
 trimer.count.by.project$total.count <- trimer.count.by.project$coding.trimer.counts * trimer.count.by.project$donor.count
 
