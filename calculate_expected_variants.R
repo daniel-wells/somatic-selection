@@ -72,7 +72,7 @@ codon.probability = 0
 		mutation.in.context = paste(substr(original.trinucleotide,2,2),substr(new.trinucleotide,2,2)," ",substr(original.trinucleotide,1,1),".",substr(original.trinucleotide,3,3),sep='')
 		
 		codon.probability = 0
-		# Outer product -> two lists
+		# Outer product(list of mutation probabilities (one per project) * (synon,nosynon)) -> two lists (nonsynon prob & synon prob for each project)
 		codon.probability <- motif.probabilities[mutation==mutation.in.context,mutation.probability] %o% c("nonsynon.prob"=nonsynon,"synon.prob"=synon)
 		
 		# For each site and letter add up probabilities
@@ -83,7 +83,9 @@ codon.probability = 0
 		
 		# Convert to data table to join
 		fivemer.probability.dt <- data.table(fivemer.probability)
+		# add project codes
 		fivemer.probability.dt$project_code <- motif.probabilities[mutation==mutation.in.context,project_code]
+		# add fivemer
 		fivemer.probability.dt$fivemer <- fivemer
 
 	  
