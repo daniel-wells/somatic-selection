@@ -5,17 +5,24 @@ sink(logfile, type="message")
 
 source("code/functions.R")
 library(data.table)
-observed_variants <- fread("data/observed_variants_by_transcript.filtered.tsv",sep="|", header=FALSE)
 
-setnames(observed_variants, c("gene.name", "gene.id", "strand", "transcript.name", "transcript.id", "protein.id", "variant.class", "nt.mutation", "aa.mutation", "projects","donors.affected","mutation","project.count","tested.donors"))
-setkey(observed_variants, transcript.id)
+observed_variants <- readRDS("data/coding.mutations.rds")
+
+# "gene.id" -> "gene_affected"
+# "transcript.id" -> "transcript_affected"
+# "variant.class" -> "consequence_type"
+setnames(observed_variants,c("icgc_mutation_id","icgc_donor_id","project_code","chromosome","chromosome_start","chromosome_end","chromosome_strand","mutation_type","reference_genome_allele","mutated_from_allele","mutated_to_allele","variant.class","aa_mutation","cds_mutation","gene.id","transcript.id","sequencing_strategy"))
+
+# columns removed in load_mutations.R creating duplicate rows
+setkey(observed_variants,icgc_mutation_id,icgc_donor_id,transcript.id)
+observed_variants <- unique(observed_variants)
 
 # Check number of each variant.class
 observed_variants[,.N,by=variant.class][order(-N)]
 
-synon.count <- observed_variants[variant.class=="synonymous_variant",list(S=sum(donors.affected)), by=list(transcript.id)]
+synon.count <- observed_variants[variant.class=="synonymous_variant",.("S"=.N), by=list(transcript.id)]
 
-nonsynon.count <- observed_variants[variant.class %in% c("missense_variant","frameshift_variant","disruptive_inframe_deletion","disruptive_inframe_insertion","inframe_deletion","inframe_insertion","start_lost","stop_lost","stop_gained"), list(N=sum(donors.affected)), by=list(transcript.id)]
+nonsynon.count <- observed_variants[variant.class %in% c("missense_variant","frameshift_variant","disruptive_inframe_deletion","disruptive_inframe_insertion","inframe_deletion","inframe_insertion","start_lost","stop_lost","stop_gained"), .("N"=.N), by=list(transcript.id)]
 
 setkey(synon.count,transcript.id)
 setkey(nonsynon.count,transcript.id)
