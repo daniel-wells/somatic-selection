@@ -5,17 +5,14 @@ digraph dfd2{
         node[shape=record]
         subgraph level0{
         fasta [label="Fasta | Ensembl", style=filled, fillcolor=yellow];
-        ICGCagg [label="VFC | ICGC aggregated", style=filled, fillcolor=yellow];
         ICGCindiv [label="TSV | ICGC Project SSM", style=filled, fillcolor=yellow];
-                        {rank=same; fasta,ICGCagg,ICGCindiv}
+                        {rank=same; fasta,ICGCindiv}
 
         expected [label="expected_variants_per_transcript.tsv" shape=box, style=filled, fillcolor=lightblue];
-        observed [label="observed_variants_by_transcript.tsv" shape=box, style=filled, fillcolor=lightblue];
+        observed [label="coding.mutations.rds" shape=box, style=filled, fillcolor=pink];
         dndsTranscript [label="dNdS_by_transcript.tsv" shape=box, style=filled, fillcolor=lightblue];
         dndsgene [label="dNdS_by_gene.tsv" shape=box, style=filled, fillcolor=green];
         graphs [label="Graphs.pdf" shape=box, style=filled, fillcolor=green];
-        enti14 [label="simple_somatic_mutation.aggregated.filtered.vcf" shape=box, style=filled, fillcolor=lightblue];
-        enti15 [label="observed_variants_by_transcript.filtered.tsv" shape=box, style=filled, fillcolor=lightblue];
         singleBaseCodingSubs [label="single.base.coding.substitutions.rds" shape=box, style=filled, fillcolor=pink];
         trimerCounts [label="coding.trimer.counts.rds" shape=box, style=filled, fillcolor=pink];
         motifProbs [label="motif.probabilities.rds" shape=box, style=filled, fillcolor=lightblue];
@@ -28,14 +25,10 @@ digraph dfd2{
         calcExpected [label="calculate_expected_variants.R}" shape=Mrecord];
         calcdnds [label="calculate_dNdS.R}" shape=Mrecord];
         analysednds [label="analyse_dNdS.R}" shape=Mrecord];
-        flatten [label="flatten_vcf.py}" shape=Mrecord];
         MakeDownload [label="{Makefile|Download Raw Data}" shape=Mrecord];
-        proc9 [label="{dNdS.sh|Filter}" shape=Mrecord];
-        proc10 [label="{dNdS.sh|Filter}" shape=Mrecord];
 		randomise [label="{randomise_genome.R}" shape=Mrecord];
 		trimerise [label="{trimerise_codome.R}" shape=Mrecord];
 		load [label="{load_mutations.R}" shape=Mrecord];
-		proc10 [label="{dNdS.sh|Filter}" shape=Mrecord];
         calcProfile [label="{calculate_mutation_profiles.R}" shape=Mrecord];
 		mergeRandom [label="{Makefile|Aggregate files}" shape=Mrecord];
 		calculateP [label="{calculate_pvalues.R}" shape=Mrecord];
@@ -69,11 +62,12 @@ digraph dfd2{
         }
 
 	# Download Data
-	MakeDownload -> {fasta, ICGCagg, ICGCindiv, biomart, vogelstein, rna}
+	MakeDownload -> {fasta, ICGCindiv, biomart, vogelstein, rna}
 	
-	ICGCindiv -> load -> {singleBaseCodingSubs,aggMut}
+	ICGCindiv -> load -> {singleBaseCodingSubs,observed,aggMut}
 	{singleBaseCodingSubs,trimerCounts} -> calcProfile -> motifProbs
-	{fasta,motifProbs} -> calcExpected -> expected -> calcdnds 	-> dndsTranscript -> analysednds -> {graphs dndsgene}
+	{fasta,motifProbs} -> calcExpected -> expected
+	{expected,observed} -> calcdnds -> dndsTranscript -> analysednds -> {graphs dndsgene}
 	
 	# Ensembl Fasta
 	fasta -> trimerise -> {codome,trimerCounts}
@@ -81,10 +75,6 @@ digraph dfd2{
 	# Create random genomes and calculate Pvalues
 	{codome,motifProbs} -> randomise -> randomisedRaw -> mergeRandom -> randomAggregated -> calculateP -> pvalues -> analysednds
 		dndsTranscript -> calculateP
-
-	# ICGC VCF
-	ICGCagg -> proc9 -> enti14 -> flatten -> observed -> proc10-> enti15 -> calcdnds
-
 
 	# Add annotations
 	{biomart,vogelstein} -> analysednds
@@ -94,6 +84,6 @@ digraph dfd2{
 
 	# Key
 #	raw -> script -> data -> results [style=invis]
-	 enti15 -> script  [style=invis, minlen=4]
+	 calcdnds -> script  [style=invis, minlen=2]
 
 }
