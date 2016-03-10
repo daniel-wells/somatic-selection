@@ -212,13 +212,6 @@ ggplot(dNdS.by.gene[uS>3], aes(x=ranking,y=dNdS)) + geom_point(aes(colour = canc
 # Bottom 25
 bottom <- dNdS.by.gene[is.finite(Log.dNdS) & Log.dNdS<low.conf(uS),.(cancer.gene,uS,uN,dNdS,gene.name,ranking,expression.percent.rank)][order(ranking)]
 
-# Get all USP17L genes with uS>3
-USP17L <- dNdS.by.gene[grep("USP17",dNdS.by.gene$gene.name),.(gene.name,chromosome,uS,uN,ranking,dNdS,Log.dNdS,expression.percent.rank)][uS>3][order(ranking)]
-
-dNdS.by.gene$USP17L <- dNdS.by.gene$gene.name %in% USP17L$gene.name
-
-# USP17L vs normal density dist + theme_grey(base_size = 30)
-ggplot(dNdS.by.gene, aes(x=dNdS,fill=USP17L)) + geom_density(alpha=0.3) + geom_vline(xintercept = 1,color = "red")  + labs(x="mean dN/dS per gene",title="Distribution of USP17L genes vs normal") + scale_x_log10() + theme(legend.position="bottom")
 
 dev.off()
 
