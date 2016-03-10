@@ -75,15 +75,9 @@ hgnc[cancer.genes][is.na(Approved.Symbol),.(Approved.Symbol,Gene.Symbol,Locus.Gr
 # Remove non protein coding genes from cancer list
 cancer.genes <- cancer.genes[Locus.Group=="protein-coding gene"]
 
-cancer.genes.strict <- fread("data/raw/cosmic_cancer_curated.tsv", header=FALSE)
-dNdS.by.gene$cancer.gene.strict <- dNdS.by.gene$gene.name %in% cancer.genes.strict$V1
 # Remove non somaticly mutated genes from cancer list
 cancer.genes <- cancer.genes[Somatic=="yes"]
 
-# All cancer gene stict are in
-cancer.genes.strict[!(cancer.genes.strict$V1 %in% dNdS.by.gene$gene.name),V1]
-sum(dNdS.by.gene$cancer.gene.strict)
-# 178 / 178
 dNdS.by.gene$cancer.gene <- dNdS.by.gene$gene %in% cancer.genes$Ensembl.ID
 # NB some duplicates, 518 unique
 
