@@ -23,18 +23,7 @@ setnames(cds,"cds.length","cds_length")
 cds[is.infinite(dNdS),S.2:=0.5]
 cds[S.2==0.5,dNdS:=dN/(S.2/synon.probability)]
 
-# For each gene, find max cds length
-max.cds.by.gene <- unique(cds[is.finite(dNdS),.(max.cds = max(cds_length,na.rm=TRUE)),by=gene])
-
-# For all rows in gene.maxlength, add cds values where cds_length=max(cds_length) by gene, for each gene (multiples as sometimes multiple transcript have max cds length)
-setkey(max.cds.by.gene,gene,max.cds)
-setkey(cds,gene,cds_length)
-dNdS.by.gene <- cds[max.cds.by.gene,]
-
-paste(nrow(dNdS.by.gene[duplicated(dNdS.by.gene)==TRUE,]),"duplicate entries (same gene and cds length) after getting dNdS from canonical (longest) transcript")
-
-print(paste(nrow(dNdS.by.gene[,.(stddev = sd(dNdS)),by=gene][stddev>0.1]),"genes with high standard deviation between transcripts and dNdS value"))
-# treat as seperate genes???
+dNdS.by.gene <- cds
 
 # set key as all columns
 setkey(dNdS.by.gene,gene)
