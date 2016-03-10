@@ -86,13 +86,21 @@ print(paste(nrow(dNdS.by.gene[cancer.gene==TRUE]),"cancer genes with dNdS value"
 print("Cancer genes not in dNdS.by.gene database (S or N = 0, or mappability bad)")
 cancer.genes[!(cancer.genes$Ensembl.ID %in% dNdS.by.gene$gene),.(Gene.Symbol,Entrez.Gene.ID,Ensembl.ID)]
 
+# Add vogelstein genes
 cancer.genes.vogelstein <- fread("data/raw/vogelstein_driver_genes.tdv", header=TRUE)
+
+# Correct Names
+cancer.genes.vogelstein[gene_name=="FAM123B",gene_name:="AMER1"]
+cancer.genes.vogelstein[gene_name=="MLL2",gene_name:="KMT2D"]
+cancer.genes.vogelstein[gene_name=="MLL3",gene_name:="KMT2C"]
+
 dNdS.by.gene$cancer.gene.vogelstein <- dNdS.by.gene$gene.name %in% cancer.genes.vogelstein$gene_name
+
+print(paste(nrow(dNdS.by.gene[cancer.gene.vogelstein==TRUE]),"vogelstein cancer genes with dNdS value"))
 
 # Which genes in vogelstein do not map to dNdS.by.gene database
 print("Genes in vogelstein list not matched to dNdS value:")
 cancer.genes.vogelstein[!(cancer.genes.vogelstein$gene_name %in% dNdS.by.gene$gene.name),gene_name]
-# 122 / 125
 
 # For all rows in dNdS.by.gene, add classification from cancer.genes.vogelstein if possible
 setkey(cancer.genes.vogelstein,gene_name)
