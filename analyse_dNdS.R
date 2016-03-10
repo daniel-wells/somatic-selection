@@ -61,13 +61,19 @@ paste(nrow(dNdS.by.gene),"genes remaining")
 
 cancer.genes <- fread("data/raw/cancer_gene_census.csv", header=TRUE)
 setnames(cancer.genes, make.names(names(cancer.genes)))
-dNdS.by.gene$cancer.gene <- dNdS.by.gene$gene.name %in% cancer.genes$Gene.Symbol
 
-# Which cancer gene names not in dNdS.by.gene database
-cancer.genes[!(cancer.genes$Gene.Symbol %in% dNdS.by.gene$gene.name),.(Gene.Symbol,Entrez.GeneId)]
 
-# 551 / 572
-# Some because not in ensembl database at all, some because either S or N = 0
+hgnc <- fread("data/raw/HGNC.tsv", header=TRUE)
+setnames(hgnc,make.names(names(hgnc)))
+setkey(hgnc,Entrez.Gene.ID)
+setkey(cancer.genes,Entrez.GeneId)
+cancer.genes <- hgnc[cancer.genes]
+
+print("Genes in Cancer Census with no Ensembl.ID")
+hgnc[cancer.genes][is.na(Approved.Symbol),.(Approved.Symbol,Gene.Symbol,Locus.Group,Entrez.Gene.ID,Ensembl.ID)]
+
+# Remove non protein coding genes from cancer list
+cancer.genes <- cancer.genes[Locus.Group=="protein-coding gene"]
 
 cancer.genes.strict <- fread("data/raw/cosmic_cancer_curated.tsv", header=FALSE)
 dNdS.by.gene$cancer.gene.strict <- dNdS.by.gene$gene.name %in% cancer.genes.strict$V1
@@ -76,6 +82,13 @@ dNdS.by.gene$cancer.gene.strict <- dNdS.by.gene$gene.name %in% cancer.genes.stri
 cancer.genes.strict[!(cancer.genes.strict$V1 %in% dNdS.by.gene$gene.name),V1]
 sum(dNdS.by.gene$cancer.gene.strict)
 # 178 / 178
+dNdS.by.gene$cancer.gene <- dNdS.by.gene$gene %in% cancer.genes$Ensembl.ID
+# NB some duplicates, 518 unique
+
+print(paste(nrow(dNdS.by.gene[cancer.gene==TRUE]),"cancer genes with dNdS value"))
+
+print("Cancer genes not in dNdS.by.gene database (S or N = 0, or mappability bad)")
+cancer.genes[!(cancer.genes$Ensembl.ID %in% dNdS.by.gene$gene),.(Gene.Symbol,Entrez.Gene.ID,Ensembl.ID)]
 
 cancer.genes.vogelstein <- fread("data/raw/vogelstein_driver_genes.tdv", header=TRUE)
 dNdS.by.gene$cancer.gene.vogelstein <- dNdS.by.gene$gene.name %in% cancer.genes.vogelstein$gene_name
