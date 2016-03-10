@@ -123,11 +123,22 @@ fasta <- fasta[multiple.of.3 & clean.alphabet]
 # Sum over all projects
 fivemer.probabilities.sum <- fivemer.probabilities[,.(nonsynon.probability=sum(nonsynon.prob),synon.probability=sum(synon.prob)),by=fivemer]
 setkey(fivemer.probabilities.sum,fivemer)
+unique <- readRDS("data/final.transcript.list.rds")
+
+# check if transcript will be used in final analysis or not (reduce loops from 83893 to 18803 i.e. 1/5th)
+names <- list()
+for (x in names(fasta)){
+metadata <- substr(x,0,15) # transcriptID
+if (metadata %in% unique){
+	names <- c(names,x)
+}
+}
 
 count.nonsynon <- function(x) {
+transcript <- fasta[[x]]
 # add N to start and beginning
 n <- DNAString("NN")
-subseq(n, start=2, end=1) <- x
+subseq(n, start=2, end=1) <- transcript
 
 # overlapping 5mers with codons in centre
 views <- Views(n, start=seq(1,length(n)-3,3), width=5)
@@ -137,21 +148,22 @@ view.chr <- data.table(fivemer=as.character(views))
 setkey(view.chr,fivemer)
 
 # Sum always returns two NA values due to first and last fivemer having N at start/beginning
-return(c(colSums(fivemer.probabilities.sum[view.chr][,.(nonsynon.probability,synon.probability)],na.rm=TRUE),"cds.length"=length(x)))
+result <- fivemer.probabilities.sum[view.chr][,.("nonsynon.probability"=sum(nonsynon.probability,na.rm=TRUE),"synon.probability"=sum(synon.probability,na.rm=TRUE))]
+result[,attributes:= x]
+result[,cds.length:= length(transcript)]
+return(result)
 
 }
 
 print(Sys.time())
 print("Summing values per fivemer")
-nonsynon.count <- vapply(fasta,count.nonsynon,FUN.VALUE=numeric(3))
-#system.time("") 11.5second -> 16mins
+nonsynon.count <- lapply(names,count.nonsynon)
+# 6.5 mins
 
 print(Sys.time())
 print("Tidying and saving data")
-# Convert matrix to data table
-nonsynon.count.dt <- data.table(t(nonsynon.count))
-# Add back attributes
-nonsynon.count.dt$attributes <- attributes(t(nonsynon.count))$dimnames[[1]]
+nonsynon.count.dt <- rbindlist(nonsynon.count)
+
 # Split attributes
 nonsynon.count.dt[, c("transcript.id","cds.type","chromosome","gene.id","gene.biotype","transcript.biotype") := tstrsplit(attributes, " ", fixed=TRUE)]
 # remove old attributes
