@@ -1,3 +1,10 @@
+source("code/functions.R")
+# Start writing to an output file
+logfile <- file(paste("logs/calculate_expected_variants.R.log",format(Sys.time(), "%Y-%m-%d.%H-%M-%S"), "txt", sep = "."))
+sink(logfile)
+sink(logfile, type="message")
+print(Sys.time())
+
 library("Biostrings")
 library(data.table)
 
@@ -134,10 +141,12 @@ return(c(colSums(fivemer.probabilities.sum[view.chr][,.(nonsynon.probability,syn
 
 }
 
+print(Sys.time())
 print("Summing values per fivemer")
 nonsynon.count <- vapply(fasta,count.nonsynon,FUN.VALUE=numeric(3))
 #system.time("") 11.5second -> 16mins
 
+print(Sys.time())
 print("Tidying and saving data")
 # Convert matrix to data table
 nonsynon.count.dt <- data.table(t(nonsynon.count))
@@ -156,6 +165,7 @@ nonsynon.count.dt[, cnames := lapply(nonsynon.count.dt[,cnames,with=FALSE],funct
 nonsynon.count.dt[, c("reference.genome","chromosome","chromosome.start","chromosome.stop","strand") := tstrsplit(chromosome, ":", fixed=TRUE)]
 
 # Save
+archive.file("data/expected_variants_per_transcript.tsv")
 write.table(nonsynon.count.dt, "data/expected_variants_per_transcript.tsv", sep="\t",row.names=FALSE,quote=FALSE)
 saveRDS(nonsynon.count.dt, "data/expected_variants_per_transcript.rds")
 
@@ -202,3 +212,8 @@ plot(merged$cds_length-merged$nonsynonymous_sites,merged$synon.probability,xlim=
 dev.off()
 
 #merged[order(-old.new.ratio)][is.na(old.new.ratio)==FALSE][nonsynonymous_sites>12000]
+
+sessionInfo()
+
+sink(type="message")
+sink()
