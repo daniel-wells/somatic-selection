@@ -29,7 +29,7 @@ dNdS.by.gene <- cds
 setkey(dNdS.by.gene,gene)
 
 # Calculate mean dNdS per gene to remove duplicates
-dNdS.by.gene <- unique(dNdS.by.gene[is.finite(dNdS),.(dNdS = mean(dNdS,na.rm=TRUE),gene.name,chromosome,chromosome.start,strand,cds_length,uS=mean(S),uN=mean(N),ucS=mean(synon.probability),ucN=mean(nonsynon.probability)),by=gene])
+dNdS.by.gene <- unique(dNdS.by.gene[is.finite(dNdS),.(dNdS = mean(dNdS,na.rm=TRUE),gene.name,chromosome,chromosome.start,strand,Ensembl.Transcript.ID,cds_length,uS=mean(S),uN=mean(N),ucS=mean(synon.probability),ucN=mean(nonsynon.probability)),by=gene])
 
 # add ranking and order
 dNdS.by.gene[,ranking:=rank(dNdS,ties.method="first")]
