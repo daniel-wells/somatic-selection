@@ -31,11 +31,6 @@ setkey(dNdS.by.gene,gene)
 # Calculate mean dNdS per gene to remove duplicates
 dNdS.by.gene <- unique(dNdS.by.gene[is.finite(dNdS),.(dNdS = mean(dNdS,na.rm=TRUE),gene.name,chromosome,chromosome.start,strand,Ensembl.Transcript.ID,cds_length,uS=mean(S),uN=mean(N),ucS=mean(synon.probability),ucN=mean(nonsynon.probability)),by=gene])
 
-# add ranking and order
-dNdS.by.gene[,ranking:=rank(dNdS,ties.method="first")]
-dNdS.by.gene <- dNdS.by.gene[order(-ranking)]
-print(paste(nrow(dNdS.by.gene),"genes"))
-
 # log dNdS as it's a ratio
 dNdS.by.gene$Log.dNdS <- log10(dNdS.by.gene$dNdS)
 # Some with N=0 leads to infinite log.dNdS values
@@ -54,6 +49,11 @@ dNdS.by.gene <- dNdS.by.gene[blacklist][!is.na(dNdS)]
 dNdS.by.gene <- dNdS.by.gene[mappability>0.75]
 paste(nrow(blacklist[mappability<0.75]),"genes removed due to mappability <0.75")
 paste(nrow(dNdS.by.gene),"genes remaining")
+
+# add ranking and order
+dNdS.by.gene[,ranking:=rank(dNdS,ties.method="first")]
+dNdS.by.gene <- dNdS.by.gene[order(-ranking)]
+print(paste(nrow(dNdS.by.gene),"genes"))
 
 ######################
 ###### Annotate ######
