@@ -59,6 +59,7 @@ paste(nrow(dNdS.by.gene),"genes remaining")
 ###### Annotate ######
 ######################
 
+##### annotate COSMIC cancer genes #####
 cancer.genes <- fread("data/raw/cancer_gene_census.csv", header=TRUE)
 setnames(cancer.genes, make.names(names(cancer.genes)))
 
