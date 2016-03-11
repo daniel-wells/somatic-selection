@@ -63,6 +63,7 @@ cancer.genes <- fread("data/raw/cancer_gene_census.csv", header=TRUE)
 setnames(cancer.genes, make.names(names(cancer.genes)))
 
 
+# Correct an filter COSMIC genes via HGNC
 hgnc <- fread("data/raw/HGNC.tsv", header=TRUE)
 setnames(hgnc,make.names(names(hgnc)))
 setkey(hgnc,Entrez.Gene.ID)
@@ -86,7 +87,7 @@ print(paste(nrow(dNdS.by.gene[cancer.gene==TRUE]),"cancer genes with dNdS value"
 print("Cancer genes not in dNdS.by.gene database (S or N = 0, or mappability bad)")
 cancer.genes[!(cancer.genes$Ensembl.ID %in% dNdS.by.gene$gene),.(Gene.Symbol,Entrez.Gene.ID,Ensembl.ID)]
 
-# Add vogelstein genes
+##### annotate vogelstein cancer genes ######
 cancer.genes.vogelstein <- fread("data/raw/vogelstein_driver_genes.tdv", header=TRUE)
 
 # Correct Names
@@ -108,7 +109,7 @@ setkey(dNdS.by.gene,gene.name)
 dNdS.by.gene$classification <- cancer.genes.vogelstein[dNdS.by.gene,classification]
 
 
-# Add expression data
+##### add expression data ######
 RNAseq <- fread("data/RNAseq.by.gene.tsv", header=TRUE)
 setnames(RNAseq,c("gene.name","mean.expression","mean.of.stdev.of.expression","expression.ranking","expression.percent.rank","log10.expression"))
 setkey(RNAseq,gene.name)
@@ -210,13 +211,13 @@ ggplot(dNdS.by.gene[uS>3], aes(x=ranking,y=dNdS)) + geom_point(aes(colour = canc
 
 dev.off()
 
-# Bottom 25
 bottom <- dNdS.by.gene[is.finite(Log.dNdS) & Log.dNdS<low.conf(uS),.(cancer.gene,uS,uN,dNdS,gene.name,ranking,expression.percent.rank)][order(ranking)]
+# Bottom Hits
 
 
 
-# Top ~65
 top <- dNdS.by.gene[Log.dNdS>up.conf(uS),.(cancer.gene,cancer.gene.vogelstein,uS,uN,dNdS,gene.name,ranking,expression.percent.rank)][order(-ranking)]
+# Top Hits
 
 # Save whole table
 archive.file("results/dNdS.tsv")
