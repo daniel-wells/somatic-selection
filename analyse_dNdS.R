@@ -208,12 +208,12 @@ ggplot(dNdS.by.gene[uS>3], aes(x=dNdS,fill=classification)) + geom_density(alpha
 # Ranked points graph (sideways S)
 ggplot(dNdS.by.gene[uS>3], aes(x=ranking,y=dNdS)) + geom_point(aes(colour = cancer.gene),alpha=0.3,shape=21,size=0.5)  + geom_hline(yintercept = 1,color = "red") + scale_y_log10() + xlim(-700,20000)+ theme_grey(base_size = 10) +  geom_text_repel(data = subset(dNdS.by.gene[uS>3], dNdS>4.25 | dNdS<0.12), aes(label = gene.name), size = 2, box.padding = unit(0.5, "lines"), point.padding = unit(0.1, "lines"), force=1,segment.size=0.2) + scale_colour_manual(name="In COSMIC cancer gene census?",  values =c("black", "red")) + labs(y="mean dN/dS per gene",title="Overall Distribution") + theme(legend.position="bottom")  
 
+dev.off()
 
 # Bottom 25
 bottom <- dNdS.by.gene[is.finite(Log.dNdS) & Log.dNdS<low.conf(uS),.(cancer.gene,uS,uN,dNdS,gene.name,ranking,expression.percent.rank)][order(ranking)]
 
 
-dev.off()
 
 # Top ~65
 top <- dNdS.by.gene[Log.dNdS>up.conf(uS),.(cancer.gene,cancer.gene.vogelstein,uS,uN,dNdS,gene.name,ranking,expression.percent.rank)][order(-ranking)]
@@ -227,8 +227,6 @@ archive.file("results/top_dNdS.tsv")
 write.table(top, "results/top_dNdS.tsv", sep="\t",row.names=FALSE,quote=FALSE)
 archive.file("results/bottom_dNdS.tsv")
 write.table(bottom, "results/bottom_dNdS.tsv", sep="\t",row.names=FALSE,quote=FALSE)
-archive.file("results/USP17L.tsv")
-write.table(USP17L, "results/USP17L.tsv", sep="\t",row.names=FALSE,quote=FALSE)
 
 sessionInfo()
 
