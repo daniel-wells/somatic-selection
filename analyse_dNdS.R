@@ -147,6 +147,7 @@ library(ggrepel)
 archive.file("results/results.pdf")
 pdf("results/results.pdf", width=16, height=9, onefile = TRUE)
 
+# Funnel plot
 ggplot(dNdS.by.gene, aes(total.mut,dNdS)) + 
 	geom_point(aes(fill = is.significant, colour = is.interesting),shape = 21,stroke=1,alpha=0.8) + 
 	theme(legend.position="bottom") + 
@@ -155,6 +156,7 @@ ggplot(dNdS.by.gene, aes(total.mut,dNdS)) +
 	scale_y_log10() + scale_x_log10() + labs(x="Total number of mutations per gene",y="n:s/N:S",title="Funnel Plot") + 
 	geom_label_repel(data = dNdS.by.gene[log(p.values)<(-5)][log(dNdS)<(-0.6) | log(dNdS)>0.6], aes(label = gene.name), size = 2, box.padding = unit(0.5, "lines"), point.padding = unit(0.1, "lines"), force=1,segment.size=0.2,segment.color="blue")
 
+# Unannotated q value Volcano Plot
 ggplot(dNdS.by.gene, aes(log(dNdS),abs(log(q.values)))) + 
 	geom_point(aes(colour = cancer.gene),alpha=0.3) + 
 	scale_colour_manual(name="In COSMIC cancer gene census?",  values =c("black", "red")) + 
@@ -162,6 +164,7 @@ ggplot(dNdS.by.gene, aes(log(dNdS),abs(log(q.values)))) +
 	scale_y_log10(limits=c(0.05,NA)) + 
 	labs(x="log(n:s/N:S) / Fold Change",y="Negative-log q-values",title="Volcano Plot")
 
+# Annotated q value Volcano Plot
 ggplot(dNdS.by.gene, aes(log(dNdS),abs(log(q.values)))) + 
 	geom_point(aes(colour = cancer.gene),alpha=0.3) + 
 	scale_colour_manual(name="In COSMIC cancer gene census?",  values =c("black", "red")) + 
@@ -174,6 +177,7 @@ ggplot(dNdS.by.gene, aes(log(dNdS),abs(log(q.values)))) +
 	geom_segment(color = "red",linetype=2,aes(x=-0.6,xend=-0.6,y=6,yend=700)) + 
 	geom_label_repel(data = dNdS.by.gene[log(q.values)<(-6)][log(dNdS)<(-0.6) | log(dNdS)>0.6], aes(label = gene.name), size = 2, box.padding = unit(0.5, "lines"), point.padding = unit(0.1, "lines"), force=1,segment.size=0.2,segment.color="blue")
 
+# Unannotated P value Volcano Plot
 ggplot(dNdS.by.gene, aes(log(dNdS),abs(log(p.values)))) + 
 	geom_point(aes(colour = cancer.gene),alpha=0.3) + 
 	scale_colour_manual(name="In COSMIC cancer gene census?",  values =c("black", "red")) + 
@@ -181,6 +185,7 @@ ggplot(dNdS.by.gene, aes(log(dNdS),abs(log(p.values)))) +
 	scale_y_log10(limits=c(0.05,NA)) + 
 	labs(x="log(n:s/N:S) / Fold Change",y="Negative-log p-values",title="Volcano Plot")
 
+# Annotated P value Volcano Plot
 ggplot(dNdS.by.gene, aes(log(dNdS),abs(log(p.values)))) + 
 	geom_point(aes(colour = cancer.gene),alpha=0.3) + 
 	scale_colour_manual(name="In COSMIC cancer gene census?",  values =c("black", "red")) + 
