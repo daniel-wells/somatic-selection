@@ -303,10 +303,14 @@ paramst <- as.list(MASS::fitdistr(dNdS.by.gene[is.finite(Log.dNdS),Log.dNdS], "t
 paramsn <- as.list(MASS::fitdistr(dNdS.by.gene[is.finite(Log.dNdS),Log.dNdS], "normal")$estimate)
 
 # QQ plot t dist
-ggplot(dNdS.by.gene, aes(sample = Log.dNdS)) + stat_qq(distribution = qt, dparams = paramst["df"])+ labs(title="QQ plot, students-t distribution")
+ggplot(dNdS.by.gene, aes(sample = Log.dNdS)) + 
+	stat_qq(distribution = qt, dparams = paramst["df"])+ 
+	labs(title="QQ plot, students-t distribution")
 
 # QQ plot normal dist
-ggplot(dNdS.by.gene, aes(sample = Log.dNdS)) + stat_qq(distribution = qnorm, dparams = paramsn)+ labs(title="QQ plot, normal distribution")
+ggplot(dNdS.by.gene, aes(sample = Log.dNdS)) + 
+	stat_qq(distribution = qnorm, dparams = paramsn)+ 
+	labs(title="QQ plot, normal distribution")
 
 library(metRology)
 # Fitting t dist over actual, args from paramst
