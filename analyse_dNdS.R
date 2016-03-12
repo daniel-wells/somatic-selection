@@ -147,7 +147,7 @@ library(ggrepel)
 archive.file("results/results.pdf")
 pdf("results/results.pdf", width=16, height=9, onefile = TRUE)
 
-ggplot(dNdS.by.gene, aes(total.mut,dNdS)) + geom_point(aes(colour = is.significant),alpha=0.3) + theme(legend.position="bottom") +  scale_colour_manual(name="q<0.00001?",  values =c("black", "red")) + scale_y_log10() + scale_x_log10() + labs(x="Total number of mutations per gene",y="n:s/N:S",title="Funnel Plot")
+ggplot(dNdS.by.gene, aes(total.mut,dNdS)) + geom_point(aes(fill = is.significant, colour = is.interesting),shape = 21,stroke=1,alpha=0.8) + theme(legend.position="bottom") + scale_fill_manual(name="significant: q<0.000001?",  values =c("black", "red")) + scale_colour_manual(name="interesting: p<0.00001?",  values =c("black", "orange")) + scale_y_log10() + scale_x_log10() + labs(x="Total number of mutations per gene",y="n:s/N:S",title="Funnel Plot") + geom_label_repel(data = dNdS.by.gene[log(p.values)<(-5)][log(dNdS)<(-0.6) | log(dNdS)>0.6], aes(label = gene.name), size = 2, box.padding = unit(0.5, "lines"), point.padding = unit(0.1, "lines"), force=1,segment.size=0.2,segment.color="blue")
 
 ggplot(dNdS.by.gene, aes(log(dNdS),abs(log(q.values)))) + geom_point(aes(colour = cancer.gene),alpha=0.3) + scale_colour_manual(name="In COSMIC cancer gene census?",  values =c("black", "red")) + theme(legend.position="bottom") + scale_y_log10(limits=c(0.05,NA)) + labs(x="log(n:s/N:S) / Fold Change",y="Negative-log q-values",title="Volcano Plot")
 
