@@ -165,7 +165,8 @@ ggplot(dNdS.by.gene, aes(log(dNdS),abs(log(q.values)))) +
 ggplot(dNdS.by.gene, aes(log(dNdS),abs(log(q.values)))) + 
 	geom_point(aes(colour = cancer.gene),alpha=0.3) + 
 	scale_colour_manual(name="In COSMIC cancer gene census?",  values =c("black", "red")) + 
-	theme(legend.position="bottom") + scale_y_log10(limits=c(0.05,NA)) + 
+	theme(legend.position="bottom") + 
+	scale_y_log10(limits=c(0.05,NA)) + 
 	labs(x="log(n:s/N:S) / Fold Change",y="Negative-log q-values",title="Volcano Plot, Annotated") + 
 	geom_segment(color = "red",linetype=2,aes(x=0.6,xend=3.5,y=6,yend=6)) + 
 	geom_segment(color = "red",linetype=2,aes(x=0.6,xend=0.6,y=6,yend=700)) + 
