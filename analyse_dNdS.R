@@ -63,6 +63,7 @@ test <- function(x, p, n){binom.test(x, n, p, alternative="two.sided")$p.value}
 dNdS.by.gene$p.values <- mapply(test, dNdS.by.gene$uS, dNdS.by.gene$prob.s, dNdS.by.gene$total.mut)
 dNdS.by.gene$q.values <- p.adjust(dNdS.by.gene$p.values, method = "fdr")
 dNdS.by.gene$is.significant <- log(dNdS.by.gene$q.values)<(-6)
+dNdS.by.gene$is.interesting <- log(dNdS.by.gene$q.values)>(-6) & log(dNdS.by.gene$p.values)<(-5)
 
 ##### annotate COSMIC cancer genes #####
 cancer.genes <- fread("data/raw/cancer_gene_census.csv", header=TRUE)
