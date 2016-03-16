@@ -12,14 +12,6 @@ library(Biostrings)
 print("Reading in reference genome")
 fasta <- readDNAStringSet("data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz")
 
-# Which sequences are not multiple of 3
-multiple.of.3 <- width(fasta) %% 3L == 0L
-# Which sequences are not ACTG only
-clean.alphabet <- alphabetFrequency(fasta, baseOnly=TRUE)[,'other'] == 0
-
-# Remove uncalculatable sequences (104,763 - 20,870 = 83,893 left)
-fasta <- fasta[multiple.of.3 & clean.alphabet]
-
 unique <- readRDS("data/final.transcript.list.rds")
 
 # extract each trimer in codome with transcript id and original codon
@@ -52,7 +44,7 @@ return(transcript.table)
 }else{}
 }
 
-
+# Should really just loop through unique here??
 stringset <- fasta
 test <- lapply(names(stringset),load.transcripts)
 # 11.5sec for 1000, *83 16 min without removing unused
