@@ -28,7 +28,7 @@ mutations[, c("project_code","chromosome","chromosome_strand","mutation_type","c
 saveRDS(mutations,"data/simple.somatic.mutations.aggregated.rds",compress = FALSE)
 
 # Save all coding substitutions
-coding.mutations <- observed_variants2[consequence_type %in% c("missense_variant", "synonymous_variant", "frameshift_variant","disruptive_inframe_deletion","disruptive_inframe_insertion","inframe_deletion","inframe_insertion","start_lost","stop_lost","stop_gained","exon_loss_variant")]
+coding.mutations <- mutations[consequence_type %in% c("missense_variant", "synonymous_variant", "frameshift_variant","disruptive_inframe_deletion","disruptive_inframe_insertion","inframe_deletion","inframe_insertion","start_lost","stop_lost","stop_gained","exon_loss_variant")]
 
 saveRDS(coding.mutations,"data/coding.mutations.rds",compress = FALSE)
 
