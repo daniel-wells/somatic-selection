@@ -32,6 +32,13 @@ coding.mutations <- mutations[consequence_type %in% c("missense_variant", "synon
 
 saveRDS(coding.mutations,"data/coding.mutations.rds",compress = FALSE)
 
+# Create list of all transcripts with observed mutation
+setkey(coding.mutations,transcript_affected)
+observed.transcripts <- data.table("transcript.id"=as.character(unique(coding.mutations[,transcript_affected])))
+setkey(observed.transcripts,transcript.id)
+saveRDS(observed.transcripts,"data/observed.transcripts.rds",compress = FALSE)
+
+
 # Save single base coding substitutions
 single.base.coding.substitutions <- mutations[mutation_type=="single base substitution" & consequence_type %in% c("missense_variant", "synonymous_variant", "frameshift_variant","disruptive_inframe_deletion","disruptive_inframe_insertion","inframe_deletion","inframe_insertion","start_lost","stop_lost","stop_gained")]
 #4,649,834
