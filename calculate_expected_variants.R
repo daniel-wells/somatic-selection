@@ -155,32 +155,32 @@ print(Sys.time())
 print("Summing values per fivemer")
 nonsynon.count <- lapply(names$V1,count.nonsynon)
 # 7 mins
-
 print(Sys.time())
+
 print("Tidying and saving data")
 nonsynon.count.dt <- rbindlist(nonsynon.count)
 
 # Split attributes
 nonsynon.count.dt[, c("transcript.id","cds.type","chromosome","gene.id","gene.biotype","transcript.biotype") := tstrsplit(attributes, " ", fixed=TRUE)]
-# remove old attributes
+# remove old column
 nonsynon.count.dt$attributes <- NULL
 
-# Remove variable names from entries
-cnames <- names(nonsynon.count.dt)[4:9]
-nonsynon.count.dt[, cnames := lapply(nonsynon.count.dt[,cnames,with=FALSE],function(x){gsub("[a-z]+_?[a-z]+:", "",x)}),with=FALSE]
-
 # Split variant location field
-nonsynon.count.dt[, c("reference.genome","chromosome","chromosome.start","chromosome.stop","strand") := tstrsplit(chromosome, ":", fixed=TRUE)]
+nonsynon.count.dt[, c("name","reference.genome","chromosome","chromosome.start","chromosome.stop","strand") := tstrsplit(chromosome, ":", fixed=TRUE)]
 
-print(paste(nrow(nonsynon.count.dt),"rows in final table"))
 
-# remove useless (refgenome,strand) and untrustworthy (cds.type,gene.id,gene/transcript biotype) annotations 
+# remove untrustworthy annotations 
 nonsynon.count.dt$cds.type <- NULL
 nonsynon.count.dt$gene.id <- NULL
 nonsynon.count.dt$gene.biotype <- NULL
 nonsynon.count.dt$transcript.biotype <- NULL
+
+# remove useless annotations
+nonsynon.count.dt$name <- NULL
 nonsynon.count.dt$strand <- NULL
 nonsynon.count.dt$reference.genome <- NULL
+
+print(paste(nrow(nonsynon.count.dt),"rows in final table"))
 
 # Add gene.name, mappability, cds length, gene.id
 setkey(unique,Ensembl.Transcript.ID)
