@@ -17,6 +17,23 @@ setnames(observed_variants,c("icgc_mutation_id","icgc_donor_id","project_code","
 setkey(observed_variants,icgc_mutation_id,icgc_donor_id,transcript.id)
 observed_variants <- unique(observed_variants)
 
+# which project/primary site has the most mutations?
+project.info <- fread("data/raw/ICGC_projects.tsv")
+setnames(project.info, "Project Code", "project_code")
+setnames(project.info, "Primary Site", "primary_site")
+project.groupings <- project.info[,.(project_code,primary_site)]
+
+project.groupings[order(primary_site)]
+
+setkey(project.groupings,project_code)
+setkey(observed_variants,project_code)
+
+observed_variants <- project.groupings[observed_variants]
+
+observed_variants[,.N,by=project_code][order(-N)]
+observed_variants[,.N,by=primary_site][order(-N)]
+
+setkey(observed_variants,icgc_mutation_id,icgc_donor_id,transcript.id)
 # Check number of each variant.class
 observed_variants[,.N,by=variant.class][order(-N)]
 
