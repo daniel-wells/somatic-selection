@@ -15,7 +15,8 @@ library(data.table)
 cds <- fread("data/dNdS_by_transcript.tsv", header=TRUE)
 print(paste(nrow(cds),"transcripts dNdS values loaded."))
 
-setnames(cds,"gene.id","gene")
+setnames(cds,"Ensembl.Gene.ID","gene")
+setnames(cds,"transcript.id","Ensembl.Transcript.ID")
 setnames(cds,"Associated.Gene.Name","gene.name")
 setnames(cds,"cds.length","cds_length")
 
@@ -24,8 +25,8 @@ dNdS.by.gene <- cds
 # set key as all columns
 setkey(dNdS.by.gene,gene)
 
-# Calculate mean dNdS per gene to remove duplicates
-dNdS.by.gene <- unique(dNdS.by.gene[,.(dNdS = mean(dNdS,na.rm=TRUE),gene.name,chromosome,chromosome.start,strand,Ensembl.Transcript.ID,cds_length,uS=mean(S),uN=mean(N),ueS=mean(synon.probability),ueN=mean(nonsynon.probability)),by=gene])
+# Calculate mean dNdS per gene to remove duplicates - NO LONGER REQUIRED
+dNdS.by.gene <- unique(dNdS.by.gene[,.(dNdS = mean(dNdS,na.rm=TRUE),gene.name,chromosome,chromosome.start,Ensembl.Transcript.ID,cds_length,uS=round(ceiling(S)),uN=ceiling(mean(N)),ueS=mean(synon.probability),ueN=mean(nonsynon.probability),mappability),by=gene])
 
 # log dNdS as it's a ratio
 dNdS.by.gene$Log.dNdS <- log10(dNdS.by.gene$dNdS)
