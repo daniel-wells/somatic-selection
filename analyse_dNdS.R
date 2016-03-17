@@ -346,19 +346,19 @@ ggplot(dNdS.by.gene[uS>3], aes(x=ranking,y=dNdS)) +
 
 dev.off()
 
-# Bottom Hits
-bottom <- dNdS.by.gene[log(q.values)<(-6) & log(dNdS)<(-0.6),.(p.values,q.values,is.significant,mappability,cancer.gene,uS,uN,dNdS,gene.name,ranking,expression.percent.rank)][order(ranking)]
+# Bottom 100 Hits (by p-value)
+bottom <- dNdS.by.gene[order(p.values)][dNdS<1,.(gene.name,uS,uN,dNdS,p.values,q.values,cancer.gene,mappability,ranking,expression.percent.rank,cancer.gene.vogelstein)][1:100]
 
 
 
-# Top Hits
-top <- dNdS.by.gene[log(q.values)<(-6) & log(dNdS)>0.6,.(cancer.gene,cancer.gene.vogelstein,p.values,q.values,mappability,uS,uN,dNdS,gene.name,ranking,expression.percent.rank)][order(-ranking)]
+# Top 100 Hits (by p-value)
+top <- dNdS.by.gene[order(p.values)][dNdS>1,.(gene.name,uS,uN,dNdS,p.values,q.values,cancer.gene,mappability,ranking,expression.percent.rank,cancer.gene.vogelstein)][1:100]
 
 # Save whole table
 archive.file("results/dNdS.tsv")
 write.table(dNdS.by.gene, "results/dNdS.tsv", sep="\t",row.names=FALSE,quote=FALSE)
 
-# Export top and bottom 25 hits to tsv file
+# Export top and bottom 100 hits to tsv file
 archive.file("results/top_dNdS.tsv")
 write.table(top, "results/top_dNdS.tsv", sep="\t",row.names=FALSE,quote=FALSE)
 archive.file("results/bottom_dNdS.tsv")
