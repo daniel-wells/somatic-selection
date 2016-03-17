@@ -190,8 +190,6 @@ nonsynon.count.dt <- nonsynon.count.dt[unique[,.(Ensembl.Transcript.ID,"Ensembl.
 # Save
 archive.file("data/expected_variants_per_transcript.tsv")
 write.table(nonsynon.count.dt, "data/expected_variants_per_transcript.tsv", sep="\t",row.names=FALSE,quote=FALSE)
-saveRDS(nonsynon.count.dt, "data/expected_variants_per_transcript.rds")
-
 
 
 # Quality Control Checks:
