@@ -205,6 +205,12 @@ ggplot(dNdS.by.gene, aes(uN)) +
 	geom_histogram(binwidth = 1) + 
 	scale_x_continuous(limits = c(0, 100)) + 
 	labs(x="mean nonsynonymous mutations per gene",title="Distribution of N per gene")
+	
+# Total mutation Histogram
+ggplot(dNdS.by.gene, aes(total.mut)) + 
+	geom_histogram(binwidth = 1) + 
+	scale_x_continuous(limits = c(0, 200)) + 
+	labs(x="mean nonsynonymous mutations per gene",title="Distribution of N per gene")
 
 # Graphs of dS by ranking
 ggplot(dNdS.by.gene, aes(ranking, dS)) + 
