@@ -47,19 +47,6 @@ setkey(expected_variants, transcript.id)
 
 print(paste(nrow(expected_variants),"expected variants per transcript loaded"))
 
-# Add annotations from GRCh38
-updated.annotations <- fread(input = 'zcat < data/raw/mart_export.txt.gz')
-setnames(updated.annotations, make.names(names(updated.annotations)))
-setkey(updated.annotations, "Ensembl.Transcript.ID")
-
-# All rows in expected_variants + any rows from updated.annotations which match
-expected_variants <- updated.annotations[expected_variants,]
-
-# Remove non protein coding transcripts AND transcripts which are not present in GRCh38
-expected_variants <- expected_variants[Transcript.type=="protein_coding",]
-
-print(paste(nrow(expected_variants),"expected variants per transcript after filtering"))
-
 # All rows in counts with rows from expected_variants which match
 expected_variants <- expected_variants[counts,nomatch=0]
 # some transcripts with observed variations do not have calculated nonsynon sites due to N or not multiple of 3, generating NA in e.g. chromosome column as these transcripts were not passed through to N per transcript. Inner Join
