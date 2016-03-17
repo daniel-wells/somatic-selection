@@ -9,35 +9,49 @@ digraph dfd2{
                         {rank=same; fasta,ICGCindiv}
 
         expected [label="expected_variants_per_transcript.tsv" shape=box, style=filled, fillcolor=lightblue];
-        observed [label="coding.mutations.rds" shape=box, style=filled, fillcolor=pink];
+        observed [label="coding.mutations.rds" shape=box, style=filled, fillcolor=lightblue];
         dndsTranscript [label="dNdS_by_transcript.tsv" shape=box, style=filled, fillcolor=lightblue];
         dndsgene [label="dNdS_by_gene.tsv" shape=box, style=filled, fillcolor=green];
         graphs [label="Graphs.pdf" shape=box, style=filled, fillcolor=green];
-        singleBaseCodingSubs [label="single.base.coding.substitutions.rds" shape=box, style=filled, fillcolor=pink];
-        trimerCounts [label="coding.trimer.counts.rds" shape=box, style=filled, fillcolor=pink];
+        singleBaseCodingSubs [label="single.base.coding.substitutions.rds" shape=box, style=filled, fillcolor=lightblue];
+        trimerCounts [label="coding.trimer.counts.rds" shape=box, style=filled, fillcolor=lightblue];
         motifProbs [label="motif.probabilities.rds" shape=box, style=filled, fillcolor=lightblue];
-        aggMut [label="simple.somatic.mutations.aggregated.rds" shape=box, style=filled, fillcolor=pink];
-		codome [label="codome.rds" shape=box, style=filled, fillcolor=pink];
-		randomAggregated [label="random.aggregated.tsv" shape=box, style=filled, fillcolor=lightblue];
-		pvalues [label="p.values.tsv" shape=box, style=filled, fillcolor=lightblue];
-		randomisedRaw [label="randomised raw files (multiple)" shape=box, style=filled, fillcolor=lightblue];
+        aggMut [label="simple.somatic.mutations.aggregated.rds" shape=box, style=filled, fillcolor=lightblue];
+		observedTranscripts [label="observed.ranscripts.rds" shape=box, style=filled, fillcolor=lightblue];
+		transcriptList [label="final.transcript.list.rds" shape=box, style=filled, fillcolor=lightblue];
+		cosmic [label="cancer_gene_census.csv" shape=box, style=filled, fillcolor=yellow];
+		hgnc [label="HGNC.tsv" shape=box, style=filled, fillcolor=yellow];
+
 
         calcExpected [label="calculate_expected_variants.R}" shape=Mrecord];
         calcdnds [label="calculate_dNdS.R}" shape=Mrecord];
         analysednds [label="analyse_dNdS.R}" shape=Mrecord];
         MakeDownload [label="{Makefile|Download Raw Data}" shape=Mrecord];
-		randomise [label="{randomise_genome.R}" shape=Mrecord];
+
 		trimerise [label="{trimerise_codome.R}" shape=Mrecord];
 		load [label="{load_mutations.R}" shape=Mrecord];
         calcProfile [label="{calculate_mutation_profiles.R}" shape=Mrecord];
-		mergeRandom [label="{Makefile|Aggregate files}" shape=Mrecord];
-		calculateP [label="{calculate_pvalues.R}" shape=Mrecord];
+		filterTranscripts [label="{filter_transcripts.R}" shape=Mrecord];
         }
+		
+		subgraph cluster_level3{
+	                        label ="Randomisation Control" fontsize="25";
+				randomise [label="{randomise_genome.R}" shape=Mrecord];
+				codome [label="codome.rds" shape=box, style=filled, fillcolor=lightblue];
+				randomAggregated [label="random.aggregated.tsv" shape=box, style=filled, fillcolor=lightblue];
+				pvalues [label="p.values.tsv" shape=box, style=filled, fillcolor=lightblue];
+				randomisedRaw [label="randomised raw files (multiple)" shape=box, style=filled, fillcolor=lightblue];
+				mergeRandom [label="{Makefile|Aggregate files}" shape=Mrecord];
+				calculateP [label="{calculate_pvalues.R}" shape=Mrecord];
+	        }
 
        subgraph cluster_level1{
                 	label ="Annotations" rank="max";
+				mappability [label="exons.hg19.mappability100.bed.gz" shape=box, style=filled, fillcolor=yellow];
         		biomart [label="Biomart Export" shape=box, style=filled, fillcolor=yellow];
 	        	vogelstein [label="Vogelstein Cancer List" shape=box, style=filled, fillcolor=yellow];
+	        	cosmic [label="COSMIC Cancer List" shape=box, style=filled, fillcolor=yellow];
+	        	hgnc [label="HGNC gene names" shape=box, style=filled, fillcolor=yellow];
 	        	rna [label="TGCA RNAseq" shape=box, style=filled, fillcolor=yellow];
 
 			rnaTotal [label="tgca_RNAseq.total.tsv" shape=box, style=filled, fillcolor=lightblue];
@@ -56,31 +70,39 @@ digraph dfd2{
                         label ="Key" fontsize="25" rank="min";
         raw [label="Raw Data" shape=box, style=filled, fillcolor=yellow];
 		data [label="Intermediate Data" shape=box, style=filled, fillcolor=lightblue];
-		cachedata [label="Cached Data" shape=box, style=filled, fillcolor=pink];
 	    results [label="Result" shape=box, style=filled, fillcolor=green];
 	    script [label="Script" shape=Mrecord];
         }
 
 	# Download Data
-	MakeDownload -> {fasta, ICGCindiv, biomart, vogelstein, rna}
+	MakeDownload -> {fasta, ICGCindiv, biomart, vogelstein, rna, mappability, cosmic, hgnc}
 	
-	ICGCindiv -> load -> {singleBaseCodingSubs,observed,aggMut}
+	# Load mutations
+	ICGCindiv -> load -> {singleBaseCodingSubs,observed,aggMut,observedTranscripts}
+	
+	# Calculate substitution 'matrix'
 	{singleBaseCodingSubs,trimerCounts} -> calcProfile -> motifProbs
-	{fasta,motifProbs} -> calcExpected -> expected
+	
+	# Calculate expected ratio of N:S
+	{fasta,motifProbs,transcriptList} -> calcExpected -> expected
+	
 	{expected,observed} -> calcdnds -> dndsTranscript -> analysednds -> {graphs dndsgene}
 	
 	# Ensembl Fasta
-	fasta -> trimerise -> {codome,trimerCounts}
+	{fasta,transcriptList} -> trimerise -> {codome,trimerCounts}
+	
+	# Filter
+	{fasta,observedTranscripts,mappability,biomart} -> filterTranscripts -> transcriptList
 	
 	# Create random genomes and calculate Pvalues
 	{codome,motifProbs} -> randomise -> randomisedRaw -> mergeRandom -> randomAggregated -> calculateP -> pvalues -> analysednds
 		dndsTranscript -> calculateP
 
-	# Add annotations
-	{biomart,vogelstein} -> analysednds
-
 	# RNA Expression
-	rna -> expression -> rnaTotal -> expressionAnalysis -> rnaGene -> analysednds
+	rna -> expression -> rnaTotal -> expressionAnalysis -> rnaGene
+
+	# Add annotations
+	{vogelstein,cosmic,hgnc,rnaGene} -> analysednds
 
 	# Key
 #	raw -> script -> data -> results [style=invis]
