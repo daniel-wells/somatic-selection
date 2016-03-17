@@ -32,21 +32,6 @@ dNdS.by.gene <- unique(dNdS.by.gene[,.(dNdS = mean(dNdS,na.rm=TRUE),gene.name,ch
 dNdS.by.gene$Log.dNdS <- log10(dNdS.by.gene$dNdS)
 # Some with N=0 leads to infinite log.dNdS values
 
-# Remove genes with poor average Alignability of 100mers (GEM from ENCODE/CRG(Guigo))
-blacklist <- fread('zcat < data/raw/exons.hg19.mappability100.bed.gz')
-setnames(blacklist,c("chromosome","start","end","exon","V5","strand","gene.id","gene.name","mappability"))
-
-blacklist <- blacklist[,.("mappability"=mean(mappability)),by=gene.id]
-
-# hist(blacklist$mappability,breaks=1000,ylim=c(0,500))
-
-# for each row in blacklist, add data from dNdS.by.gene
-setkey(dNdS.by.gene,gene)
-dNdS.by.gene <- dNdS.by.gene[blacklist][!is.na(dNdS)]
-dNdS.by.gene <- dNdS.by.gene[mappability>0.75]
-paste(nrow(blacklist[mappability<0.75]),"genes removed due to mappability <0.75")
-paste(nrow(dNdS.by.gene),"genes remaining")
-
 # add ranking and order
 dNdS.by.gene[,ranking:=rank(dNdS,ties.method="first")]
 dNdS.by.gene <- dNdS.by.gene[order(-ranking)]
