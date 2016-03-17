@@ -112,14 +112,6 @@ names(fivemer.probabilities) <- c("nonsynon.prob","synon.prob","project_code","f
 print("Reading in reference genome")
 fasta <- readDNAStringSet("data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz")
 
-# Which sequences are not multiple of 3
-multiple.of.3 <- width(fasta) %% 3L == 0L
-# Which sequences are not ACTG only
-clean.alphabet <- alphabetFrequency(fasta, baseOnly=TRUE)[,'other'] == 0
-
-# Remove uncalculatable sequences (104,763 - 20,870 = 83,893 left)
-fasta <- fasta[multiple.of.3 & clean.alphabet]
-
 # Sum over all projects
 fivemer.probabilities.sum <- fivemer.probabilities[,.(nonsynon.probability=sum(nonsynon.prob),synon.probability=sum(synon.prob)),by=fivemer]
 setkey(fivemer.probabilities.sum,fivemer)
