@@ -171,6 +171,22 @@ nonsynon.count.dt[, cnames := lapply(nonsynon.count.dt[,cnames,with=FALSE],funct
 # Split variant location field
 nonsynon.count.dt[, c("reference.genome","chromosome","chromosome.start","chromosome.stop","strand") := tstrsplit(chromosome, ":", fixed=TRUE)]
 
+print(paste(nrow(nonsynon.count.dt),"rows in final table"))
+
+# remove useless (refgenome,strand) and untrustworthy (cds.type,gene.id,gene/transcript biotype) annotations 
+nonsynon.count.dt$cds.type <- NULL
+nonsynon.count.dt$gene.id <- NULL
+nonsynon.count.dt$gene.biotype <- NULL
+nonsynon.count.dt$transcript.biotype <- NULL
+nonsynon.count.dt$strand <- NULL
+nonsynon.count.dt$reference.genome <- NULL
+
+# Add gene.name, mappability, cds length, gene.id
+setkey(unique,Ensembl.Transcript.ID)
+setkey(nonsynon.count.dt,transcript.id)
+
+nonsynon.count.dt <- nonsynon.count.dt[unique[,.(Ensembl.Transcript.ID,"Ensembl.Gene.ID"=gene.id,mappability,Associated.Gene.Name)]]
+
 # Save
 archive.file("data/expected_variants_per_transcript.tsv")
 write.table(nonsynon.count.dt, "data/expected_variants_per_transcript.tsv", sep="\t",row.names=FALSE,quote=FALSE)
