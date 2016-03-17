@@ -106,15 +106,19 @@ return(fivemer.probability.calc)
 
 fivemer.probabilities <- calculate.fivemer.probability()
 # for some reason TAA is added to end of first two column names
+# 30 seconds
 names(fivemer.probabilities) <- c("nonsynon.prob","synon.prob","project_code","fivemer")
 
 
 print("Reading in reference genome")
 fasta <- readDNAStringSet("data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz")
 
-# Sum over all projects
+# Sum over all (OR SOME) projects - project_code=="UCEC-US"
 fivemer.probabilities.sum <- fivemer.probabilities[,.(nonsynon.probability=sum(nonsynon.prob),synon.probability=sum(synon.prob)),by=fivemer]
 setkey(fivemer.probabilities.sum,fivemer)
+
+print("Cancers: All")
+
 unique <- readRDS("data/final.transcript.list.rds")
 setkey(unique,Ensembl.Transcript.ID)
 
