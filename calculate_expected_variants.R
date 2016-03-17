@@ -116,15 +116,18 @@ fasta <- readDNAStringSet("data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz")
 fivemer.probabilities.sum <- fivemer.probabilities[,.(nonsynon.probability=sum(nonsynon.prob),synon.probability=sum(synon.prob)),by=fivemer]
 setkey(fivemer.probabilities.sum,fivemer)
 unique <- readRDS("data/final.transcript.list.rds")
+setkey(unique,Ensembl.Transcript.ID)
 
 # check if transcript will be used in final analysis or not (reduce loops from 83893 to 18803 i.e. 1/5th)
-names <- list()
-for (x in names(fasta)){
-metadata <- substr(x,0,15) # transcriptID
-if (metadata %in% unique){
-	names <- c(names,x)
-}
-}
+fasta.names <- data.table(names(fasta))
+fasta.names$transcript.id <- substr(fasta.names$V1,0,15)
+setkey(fasta.names,transcript.id)
+names <- fasta.names[unique]
+# remove transcripts not in fasta (ESNTR etc)
+print("transcripts not in fasta reference genome")
+names[is.na(V1)]
+names <- names[!is.na(V1)]
+
 
 count.nonsynon <- function(x) {
 transcript <- fasta[[x]]
@@ -149,7 +152,7 @@ return(result)
 
 print(Sys.time())
 print("Summing values per fivemer")
-nonsynon.count <- lapply(names,count.nonsynon)
+nonsynon.count <- lapply(names$V1,count.nonsynon)
 # 6.5 mins
 
 print(Sys.time())
