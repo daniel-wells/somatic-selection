@@ -108,16 +108,12 @@ fivemer.probabilities <- calculate.fivemer.probability()
 # for some reason TAA is added to end of first two column names
 # 30 seconds
 names(fivemer.probabilities) <- c("nonsynon.prob","synon.prob","project_code","fivemer")
+setkey(fivemer.probabilities,fivemer)
 
 
 print("Reading in reference genome")
 fasta <- readDNAStringSet("data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz")
 
-# Sum over all (OR SOME) projects - project_code=="UCEC-US"
-fivemer.probabilities.sum <- fivemer.probabilities[,.(nonsynon.probability=sum(nonsynon.prob),synon.probability=sum(synon.prob)),by=fivemer]
-setkey(fivemer.probabilities.sum,fivemer)
-
-print("Cancers: All")
 
 unique <- readRDS("data/final.transcript.list.rds")
 setkey(unique,Ensembl.Transcript.ID)
@@ -147,7 +143,8 @@ view.chr <- data.table(fivemer=as.character(views))
 setkey(view.chr,fivemer)
 
 # Sum always returns two NA values due to first and last fivemer having N at start/beginning
-result <- fivemer.probabilities.sum[view.chr][,.("nonsynon.probability"=sum(nonsynon.probability,na.rm=TRUE),"synon.probability"=sum(synon.probability,na.rm=TRUE))]
+# Need to group by fivemer before to eliminate duplicate keys and unnececcary joins and unnecessarily large resulting table
+result <- fivemer.probabilities[view.chr[,.N,by=fivemer]][,.("nonsynon.probability"=sum(nonsynon.prob*N,na.rm=TRUE),"synon.probability"=sum(synon.prob*N,na.rm=TRUE)),by=project_code]
 result[,attributes:= x]
 result[,cds.length:= length(transcript)]
 return(result)
@@ -157,7 +154,7 @@ return(result)
 print(Sys.time())
 print("Summing values per fivemer")
 nonsynon.count <- lapply(names$V1,count.nonsynon)
-# 6.5 mins
+# 7 mins
 
 print(Sys.time())
 print("Tidying and saving data")
