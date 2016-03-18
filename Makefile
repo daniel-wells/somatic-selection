@@ -22,31 +22,21 @@ URLS=$(shell awk '{printf "%s\n", $$1}' data/url-list.txt)
 
 ICGC_project_mutation_files=$(addprefix data/raw/ICGC/,$(notdir $(URLS)))
 
-raw_data: data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz data/raw/mart_export.txt.gz data/raw/simple_somatic_mutation.aggregated.vcf.gz $(ICGC_project_mutation_files) data/raw/cancer_gene_census.csv data/raw/vogelstein_driver_genes.tdv data/raw/ICGC_projects.tsv
-
 $(ICGC_project_mutation_files): data/url-list.txt
 	mkdir -p $(dir $@)
-	wget "$(filter $(addprefix %/,$(notdir $@)),$(URLS))" -O $@
+	curl "$(filter $(addprefix %/,$(notdir $@)),$(URLS))" -o $@
 	# 2.6G in total
 	#? find data/raw/ICGC -name "simple_somatic_mutation.open.*.tsv.gz" -exec touch {} \;
 
 data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz:
 	# Download ensembl cds nt sequence - referenced as ftp://ftp.ensembl.org/pub/release-75/mysql/homo_sapiens_core_75_37/ at https://docs.icgc.org/methods
-	wget ftp://ftp.ensembl.org/pub/release-75/fasta/homo_sapiens/cds/Homo_sapiens.GRCh37.75.cds.all.fa.gz -O data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz
-	wget ftp://ftp.ensembl.org/pub/release-75/fasta/homo_sapiens/cds/CHECKSUMS -O data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz.CHECKSUMS
-	wget ftp://ftp.ensembl.org/pub/release-75/fasta/homo_sapiens/cds/README -O data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz.README
+	curl ftp://ftp.ensembl.org/pub/release-75/fasta/homo_sapiens/cds/Homo_sapiens.GRCh37.75.cds.all.fa.gz -o data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz
+	curl ftp://ftp.ensembl.org/pub/release-75/fasta/homo_sapiens/cds/CHECKSUMS -o data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz.CHECKSUMS
+	curl ftp://ftp.ensembl.org/pub/release-75/fasta/homo_sapiens/cds/README -o data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz.README3
 	sum data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz
 	head -1 data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz.CHECKSUMS
 	sha256sum data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz >> data/raw/SHA256SUMS
 
-
-data/raw/simple_somatic_mutation.aggregated.vcf.gz:
-	# Download ICGC aggregated varients
-	wget https://dcc.icgc.org/api/v1/download?fn=/release_20/Summary/simple_somatic_mutation.aggregated.vcf.gz -O data/raw/simple_somatic_mutation.aggregated.vcf.gz
-	# No hash avaliable
-	wget https://dcc.icgc.org/api/v1/download?fn=/release_20/README.txt -O data/raw/simple_somatic_mutation.aggregated.vcf.gz.README
-	sha256sum data/raw/simple_somatic_mutation.aggregated.vcf.gz >> data/raw/SHA256SUMS
-	sha256sum -c data/raw/SHA256SUMS
 
 data/raw/mart_export.txt.gz:
 	# Requires manual download
@@ -64,11 +54,20 @@ data/raw/vogelstein_driver_genes.tdv:
 	# Requires manual download
 
 $(TGCA_RNAseq_data):
-	# ?????
+	# Requires manual download
 
-#################################
+data/raw/HGNC.tsv:
+	# Requires manual download
+
+data/raw/exons.hg19.mappability100.bed.gz:
+	# Requires manual download
+
+raw_data: data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz data/raw/mart_export.txt.gz $(ICGC_project_mutation_files) data/raw/cancer_gene_census.csv data/raw/vogelstein_driver_genes.tdv data/raw/ICGC_projects.tsv data/raw/exons.hg19.mappability100.bed.gz data/raw/HGNC.tsv $(TGCA_RNAseq_data)
+
+
+#############################
 ####### Main Analysis #######
-#################################
+#############################
 
 #######
 ####### RNAseq
@@ -83,52 +82,45 @@ data/RNAseq.by.gene.tsv: code/expression_analysis.R data/tgca_RNAseq.total.tsv
 	Rscript code/expression_analysis.R
 
 #######
-####### Expected Variants 
+####### Calculate Expected N:S
 #######
 
-data/single.base.coding.substitutions.rds data/coding.trimer.counts.rds: code/sequence_context.R
-	Rscript code/sequence_context.R
+# Load/filter Mutations
+data/single.base.coding.substitutions.rds data/coding.mutations.rds data/observed.transcripts.rds: code/load_mutations.R
+	Rscript code/load_mutations.R
 
-data/motif.probabilities.rds: code/sequence_context.R $(ICGC_project_mutation_files)
-	Rscript code/sequence_context.R
+# Choose which transcripts to use
+data/final.transcript.list.rds: code/filter_transcripts.R data/observed.transcripts.rds data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz data/raw/mart_export.txt.gz data/raw/exons.hg19.mappability100.bed.gz
+	Rscript filter_transcripts.R
 
-data/expected_variants_per_transcript.tsv: code/calculate_nonsynon_sites.R data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz data/motif.probabilities.rds
-	Rscript code/calculate_nonsynon_sites.R
+# Count trimers
+data/coding.trimer.counts.rds: code/trimerise_codome.R data/final.transcript.list.rds data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz
+	Rscript trimerise_codome.R
+
+# Calculate substitution matrix / mutation profiles
+data/motif.probabilities.rds: code/calculate_mutation_profiles.R data/coding.trimer.counts.rds data/single.base.coding.substitutions.rds
+	Rscript code/calculate_mutation_profiles.R
+
+# Calculate expected N:S
+data/expected_variants_per_transcript.tsv: code/calculate_expected_variants.R data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz data/motif.probabilities.rds data/final.transcript.list.rds
+	Rscript code/calculate_expected_variants.R
 
 #######
-####### Actual Variants
+####### Randomisation Control
 #######
 
-data/simple_somatic_mutation.aggregated.filtered.vcf: data/raw/simple_somatic_mutation.aggregated.vcf.gz
-	# To keep headers (modify grep to append), or modify below by egrep '(^#|missense_variant)'
-	# head -13 simple_somatic_mutation.aggregated.vcf > simple_somatic_mutation.aggregated.coding.vcf
-
-	# Remove lines which are irrelevant (e.g. only intron, intergenic)
-	zgrep 'missense_variant\|synonymous_variant\|frameshift_variant\|disruptive_inframe_deletion\|disruptive_inframe_insertion\|inframe_deletion\|inframe_insertion\|start_lost\|stop_lost\|exon_variant' data/raw/simple_somatic_mutation.aggregated.vcf.gz > data/simple_somatic_mutation.aggregated.filtered.vcf
-	# 2min40s
-	# 1,942,374 lines
-	#? find data/raw -name "Homo_sapiens.GRCh37.75.cds.all.fa.gz*" -exec touch {} \;
-
-data/observed_variants_by_transcript.tsv: code/flatten_vcf.py data/simple_somatic_mutation.aggregated.filtered.vcf
-	# Create table with each variant annotation pair on seperate line
-	python code/flatten_vcf.py data/simple_somatic_mutation.aggregated.filtered.vcf > data/observed_variants_by_transcript.tsv
-	# 1 min
-	# 12,857,317 lines
-
-data/observed_variants_by_transcript.filtered.tsv: data/observed_variants_by_transcript.tsv
-	# Subset only synon or non-synon for dnds calculation
-	# NB this removes genes which were sequenced but have non measured synon or non-synon variations
-	zgrep 'missense_variant\|synonymous_variant\|frameshift_variant\|disruptive_inframe_deletion\|disruptive_inframe_insertion\|inframe_deletion\|inframe_insertion\|start_lost\|stop_lost\|exon_variant' data/observed_variants_by_transcript.tsv > data/observed_variants_by_transcript.filtered.tsv
+# To Do!
 
 #######
 ####### Expected & Actual Integration
 #######
 
-# Map counted actual N and S from ICGC VCF to total possible N and S from ensembl cds fasta
-data/dNdS_by_transcript.tsv: code/calculate_dNdS.R data/observed_variants_by_transcript.filtered.tsv data/expected_variants_per_transcript.tsv
+# Join expected and actual N & S, calculate odds ratio and p-values
+data/dNdS_byproject.tsv data/dNdS_bysite.tsv data/dNdS_pancancer.tsv: code/calculate_dNdS.R data/expected_variants_per_transcript.tsv data/coding.mutations.rds
 	Rscript code/calculate_dNdS.R
 
+# Plot results
 # % are to ensure rule is not run twice for both targets when running make in parallel
-results/figures%pdf results/dNdS_by_gene%tsv: code/analyse_dNdS.R data/raw/cancer_gene_census.csv data/RNAseq.by.gene.tsv data/dNdS_by_transcript.tsv data/raw/vogelstein_driver_genes.tdv data/raw/mart_export.txt.gz
+results/figures%pdf results/dNdS_by_gene%tsv: code/analyse_dNdS.R data/raw/cancer_gene_census.csv data/RNAseq.by.gene.tsv data/dNdS_byproject.tsv data/dNdS_bysite.tsv data/dNdS_pancancer.tsv data/raw/vogelstein_driver_genes.tdv data/raw/HGNC.tsv
 	# Generate histogram and distribution of dNdS
 	Rscript code/analyse_dNdS.R
