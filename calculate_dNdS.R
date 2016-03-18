@@ -17,6 +17,9 @@ setnames(observed_variants,c("icgc_mutation_id","icgc_donor_id","project_code","
 setkey(observed_variants,icgc_mutation_id,icgc_donor_id,transcript.id)
 observed_variants <- unique(observed_variants)
 
+print("observed_variants summary:")
+print(summary(observed_variants))
+
 # which project/primary site has the most mutations?
 project.info <- fread("data/raw/ICGC_projects.tsv")
 setnames(project.info, "Project Code", "project_code")
@@ -33,59 +36,173 @@ observed_variants <- project.groupings[observed_variants]
 observed_variants[,.N,by=project_code][order(-N)]
 observed_variants[,.N,by=primary_site][order(-N)]
 
+observed_variants[,transcript.id:=as.character(transcript.id)]
 setkey(observed_variants,icgc_mutation_id,icgc_donor_id,transcript.id)
+
 # Check number of each variant.class
 observed_variants[,.N,by=variant.class][order(-N)]
 
-synon.count <- observed_variants[variant.class=="synonymous_variant",.("S"=.N), by=list(transcript.id)]
+synon.count <- observed_variants[variant.class=="synonymous_variant",.("S"=.N), by=list(transcript.id,project_code)]
 
-nonsynon.count <- observed_variants[variant.class %in% c("missense_variant","frameshift_variant","disruptive_inframe_deletion","disruptive_inframe_insertion","inframe_deletion","inframe_insertion","start_lost","stop_lost","stop_gained"), .("N"=.N), by=list(transcript.id)]
+nonsynon.count <- observed_variants[variant.class %in% c("missense_variant","frameshift_variant","disruptive_inframe_deletion","disruptive_inframe_insertion","inframe_deletion","inframe_insertion","start_lost","stop_lost","stop_gained"), .("N"=.N), by=list(transcript.id,project_code)]
 
-setkey(synon.count,transcript.id)
-setkey(nonsynon.count,transcript.id)
+setkey(synon.count,transcript.id,project_code)
+setkey(nonsynon.count,transcript.id,project_code)
 
 # Full outer join
 counts <- merge(synon.count,nonsynon.count, all=TRUE)
-setkey(counts, transcript.id)
-print(paste(nrow(counts[is.na(S),]),"transcripts with synon count of 0"))
-print(paste(nrow(counts[is.na(N),]),"transcripts with nonsynon count of 0"))
+
+print(paste(nrow(counts[is.na(S),]),"project-transcripts with synon count of 0"))
+print(paste(nrow(counts[is.na(N),]),"project-transcripts with nonsynon count of 0"))
 
 # No rows with both N and S NA - i.e. all NA's are actually Zeros - gene must have been sequenced if one of the two catagories are >0
 # Non sequenced genes are just not in this list as it's generated from variant observed list
 print(paste(nrow(counts[is.na(N) & is.na(S),]),"transcripts with both nonsynon and synon count of 0"))
 
+stopifnot(nrow(counts[is.na(N) & is.na(S),])==0)
+
 # Therefore set NA's to 0
 counts$N[is.na(counts$N)] <- 0
 counts$S[is.na(counts$S)] <- 0
 
+# Add project grouping information
+setkey(counts, project_code)
+counts <- project.groupings[counts]
+
+print("Counts by project summary:")
+print(summary(counts))
+
+# counts by primary site
+counts.bysite <- counts[,.(S=sum(S),N=sum(N)),by=.(primary_site,transcript.id)]
+
+print("Counts by site summary:")
+print(summary(counts.bysite))
+print(paste(nrow(counts.bysite[S==0]),"site-transcripts with synon count of 0"))
+print(paste(nrow(counts.bysite[N==0]),"site-transcripts with nonsynon count of 0"))
+
+# counts overall
+counts.pancancer <- counts[,.(S=sum(S),N=sum(N)),by=transcript.id]
+
+print("Counts pancancer summary:")
+print(summary(counts.pancancer))
+print(paste(nrow(counts.pancancer[S==0]),"site-transcripts with synon count of 0"))
+print(paste(nrow(counts.pancancer[N==0]),"site-transcripts with nonsynon count of 0"))
+
 # Load expected variants per transcript
 expected_variants <- fread("data/expected_variants_per_transcript.tsv", header=TRUE)
-setkey(expected_variants, transcript.id)
-
 print(paste(nrow(expected_variants),"expected variants per transcript loaded"))
 
+# Add project grouping information
+setkey(expected_variants, project_code)
+expected_variants <- project.groupings[expected_variants]
+setkey(expected_variants,transcript.id,primary_site)
+
+print("expected_variants summary:")
+print(summary(expected_variants))
+
+# aggregate by primary_site
+expected_variants.bysite <- unique(expected_variants[,.(nonsynon.probability=sum(nonsynon.probability),synon.probability=sum(synon.probability),cds.length,chromosome,chromosome.start,chromosome.stop,Ensembl.Gene.ID,mappability,Associated.Gene.Name),by=.(transcript.id,primary_site)])
+
+# aggregate over all cancers
+expected_variants.pancancer <- unique(expected_variants[,.(nonsynon.probability=sum(nonsynon.probability),synon.probability=sum(synon.probability),cds.length,chromosome,chromosome.start,chromosome.stop,Ensembl.Gene.ID,mappability,Associated.Gene.Name),by=transcript.id])
+
+# Join expected with actual counts
+setkey(expected_variants,transcript.id,project_code)
+setkey(counts,transcript.id,project_code)
 # All rows in counts with rows from expected_variants which match
-expected_variants <- expected_variants[counts,nomatch=0]
+expected_variants.byproject <- expected_variants[counts,nomatch=0]
 # some transcripts with observed variations do not have calculated nonsynon sites due to N or not multiple of 3, generating NA in e.g. chromosome column as these transcripts were not passed through to N per transcript. Inner Join
-print(paste(nrow(expected_variants),"expected variants per transcript with measured actual variants"))
+print(paste(nrow(expected_variants.byproject),"expected variants per project-transcript with measured actual variants"))
+
+setkey(expected_variants.bysite,transcript.id,primary_site)
+setkey(counts.bysite,transcript.id,primary_site)
+expected_variants.bysite <- expected_variants.bysite[counts.bysite,nomatch=0]
+
+setkey(expected_variants.pancancer,transcript.id)
+setkey(counts.pancancer,transcript.id)
+expected_variants.pancancer <- expected_variants.pancancer[counts.pancancer,nomatch=0]
 
 # Calculate dNdS
-expected_variants$dS <- expected_variants$S / expected_variants$synon.probability
-expected_variants$dN <- expected_variants$N / expected_variants$nonsynon.probability
-expected_variants$dNdS <- expected_variants$dN / expected_variants$dS
+expected_variants.pancancer[,expected.ratio:=nonsynon.probability/synon.probability]
+expected_variants.pancancer[,observed.ratio:=N/S]
+expected_variants.pancancer[,odds.ratio:=observed.ratio/expected.ratio]
 
-print(paste(nrow(expected_variants[N==0]),"transcripts have N==0 generating a dNdS of 0"))
-print(paste(nrow(expected_variants[S==0]),"transcripts have S==0 generating a dNdS of Inf"))
-print(paste(nrow(expected_variants[S==0 & N==0]),"transcripts have S and N ==0"))
-print(paste(nrow(expected_variants[is.na(dS)]),"transcripts have dS as NaN generating a dNdS of NaN:"))
+expected_variants.bysite[,expected.ratio:=nonsynon.probability/synon.probability]
+expected_variants.bysite[,observed.ratio:=N/S]
+expected_variants.bysite[,odds.ratio:=observed.ratio/expected.ratio]
+
+expected_variants.byproject[,expected.ratio:=nonsynon.probability/synon.probability]
+expected_variants.byproject[,observed.ratio:=N/S]
+expected_variants.byproject[,odds.ratio:=observed.ratio/expected.ratio]
+
+
+# log ratio
+expected_variants.pancancer[,log2.odds.ratio:=log(odds.ratio,2)]
+expected_variants.bysite[,log2.odds.ratio:=log(odds.ratio,2)]
+expected_variants.byproject[,log2.odds.ratio:=log(odds.ratio,2)]
+# Some with N=0 leads to infinite log.dNdS values
+
+print(paste(nrow(expected_variants.bysite[N==0]),"site-transcripts have N==0 generating a dNdS of 0"))
+print(paste(nrow(expected_variants.bysite[S==0]),"site-transcripts have S==0 generating a dNdS of Inf"))
+print(paste(nrow(expected_variants.bysite[S==0 & N==0]),"site-transcripts have S and N ==0"))
+print(paste(nrow(expected_variants.bysite[is.na(expected.ratio)]),"site-transcripts have dS as NaN generating a dNdS of NaN:"))
+
+print(paste(nrow(expected_variants.byproject[N==0]),"project-transcripts have N==0 generating a dNdS of 0"))
+print(paste(nrow(expected_variants.byproject[S==0]),"project-transcripts have S==0 generating a dNdS of Inf"))
+print(paste(nrow(expected_variants.byproject[S==0 & N==0]),"project-transcripts have S and N ==0"))
+print(paste(nrow(expected_variants.byproject[is.na(expected.ratio)]),"project-transcripts have dS as NaN generating a dNdS of NaN:"))
+
+print(paste(nrow(expected_variants.pancancer[N==0]),"pancancer-transcripts have N==0 generating a dNdS of 0"))
+print(paste(nrow(expected_variants.pancancer[S==0]),"pancancer-transcripts have S==0 generating a dNdS of Inf"))
+print(paste(nrow(expected_variants.pancancer[S==0 & N==0]),"pancancer-transcripts have S and N ==0"))
+print(paste(nrow(expected_variants.pancancer[is.na(expected.ratio)]),"pancancer-transcripts have dS as NaN generating a dNdS of NaN:"))
 expected_variants[synon.probability==0 | nonsynon.probability==0]
 
-# Remove dNdS NA, NaN
-expected_variants <- expected_variants[is.na(dNdS)==FALSE,]
-print(paste(nrow(expected_variants),"transcripts to be written to file"))
 
-archive.file("data/dNdS_by_transcript.tsv")
-write.table(expected_variants, "data/dNdS_by_transcript.tsv", sep="\t", row.names=FALSE, quote=FALSE)
+##### calculate p-values #####
+expected_variants.pancancer[,"total.mut":=S+N]
+expected_variants.pancancer[,"prob.s":=synon.probability/(nonsynon.probability+synon.probability)]
+
+expected_variants.bysite[,"total.mut":=S+N]
+expected_variants.bysite[,"prob.s":=synon.probability/(nonsynon.probability+synon.probability)]
+
+expected_variants.byproject[,"total.mut":=S+N]
+expected_variants.byproject[,"prob.s":=synon.probability/(nonsynon.probability+synon.probability)]
+
+print("Calculating P-values")
+test <- function(x, p, n){binom.test(x, n, p, alternative="two.sided")$p.value}
+expected_variants.pancancer[,p.value:=mapply(test, S, prob.s, total.mut)]
+expected_variants.bysite[,p.value:=mapply(test, S, prob.s, total.mut)]
+expected_variants.byproject[,p.value:=mapply(test, S, prob.s, total.mut)]
+
+# Adjust by BH method
+expected_variants.pancancer[,q.value:=p.adjust(p.value, method = "fdr")]
+expected_variants.bysite[,q.value:=p.adjust(p.value, method = "fdr"),by=primary_site]
+expected_variants.byproject[,q.value:=p.adjust(p.value, method = "fdr"),by=project_code]
+
+print("By project summary:")
+print(summary(expected_variants.byproject))
+
+print("By site summary:")
+print(summary(expected_variants.bysite))
+
+print("Pancancer summary:")
+print(summary(expected_variants.pancancer))
+
+# Check odds ratio is not 0/0
+stopifnot(nrow(expected_variants.byproject[is.na(odds.ratio)==TRUE,])==0)
+stopifnot(nrow(expected_variants.bysite[is.na(odds.ratio)==TRUE,])==0)
+stopifnot(nrow(expected_variants.pancancer[is.na(odds.ratio)==TRUE,])==0)
+
+
+archive.file("data/dNdS_byproject.tsv")
+write.table(expected_variants.byproject[order(p.value)], "data/dNdS_byproject.tsv", sep="\t", row.names=FALSE, quote=FALSE)
+
+archive.file("data/dNdS_bysite.tsv")
+write.table(expected_variants.bysite[order(p.value)], "data/dNdS_bysite.tsv", sep="\t", row.names=FALSE, quote=FALSE)
+
+archive.file("data/dNdS_pancancer.tsv")
+write.table(expected_variants.pancancer[order(p.value)], "data/dNdS_pancancer.tsv", sep="\t", row.names=FALSE, quote=FALSE)
 
 sessionInfo()
 
