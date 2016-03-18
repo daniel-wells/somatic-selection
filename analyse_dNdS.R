@@ -15,25 +15,17 @@ library(data.table)
 cds <- fread("data/dNdS_by_transcript.tsv", header=TRUE)
 print(paste(nrow(cds),"transcripts dNdS values loaded."))
 
-setnames(cds,"Ensembl.Gene.ID","gene")
 setnames(cds,"transcript.id","Ensembl.Transcript.ID")
 setnames(cds,"Associated.Gene.Name","gene.name")
-setnames(cds,"cds.length","cds_length")
 
 dNdS.by.gene <- cds
 
-# set key as all columns
-setkey(dNdS.by.gene,gene)
+# set key
+setkey(dNdS.by.gene,Ensembl.Gene.ID)
 
-# Calculate mean dNdS per gene to remove duplicates - NO LONGER REQUIRED
-dNdS.by.gene <- unique(dNdS.by.gene[,.(dNdS = mean(dNdS,na.rm=TRUE),gene.name,chromosome,chromosome.start,Ensembl.Transcript.ID,cds_length,uS=round(ceiling(S)),uN=ceiling(mean(N)),ueS=mean(synon.probability),ueN=mean(nonsynon.probability),mappability),by=gene])
-
-# log dNdS as it's a ratio
-dNdS.by.gene$Log.dNdS <- log10(dNdS.by.gene$dNdS)
-# Some with N=0 leads to infinite log.dNdS values
 
 # add ranking and order
-dNdS.by.gene[,ranking:=rank(dNdS,ties.method="first")]
+dNdS.by.gene[,ranking:=rank(odds.ratio,ties.method="first")]
 dNdS.by.gene <- dNdS.by.gene[order(-ranking)]
 print(paste(nrow(dNdS.by.gene),"genes"))
 
@@ -72,13 +64,13 @@ cancer.genes <- cancer.genes[Locus.Group=="protein-coding gene"]
 # Remove non somaticly mutated genes from cancer list
 cancer.genes <- cancer.genes[Somatic=="yes"]
 
-dNdS.by.gene$cancer.gene <- dNdS.by.gene$gene %in% cancer.genes$Ensembl.ID
+dNdS.by.gene$cancer.gene <- dNdS.by.gene$Ensembl.Gene.ID %in% cancer.genes$Ensembl.ID
 # NB some duplicates, 518 unique
 
 print(paste(nrow(dNdS.by.gene[cancer.gene==TRUE]),"cancer genes with dNdS value"))
 
 print("Cancer genes not in dNdS.by.gene database (S or N = 0, or mappability bad)")
-cancer.genes[!(cancer.genes$Ensembl.ID %in% dNdS.by.gene$gene),.(Gene.Symbol,Entrez.Gene.ID,Ensembl.ID)]
+cancer.genes[!(cancer.genes$Ensembl.ID %in% dNdS.by.gene$Ensembl.Gene.ID),.(Gene.Symbol,Entrez.Gene.ID,Ensembl.ID)]
 
 ##### annotate vogelstein cancer genes ######
 cancer.genes.vogelstein <- fread("data/raw/vogelstein_driver_genes.tdv", header=TRUE)
@@ -115,14 +107,14 @@ dNdS.by.gene <- RNAseq[dNdS.by.gene,]
 
 
 # to detect bias calculate dN, dS, and ranking given a cutoff
-dNdS.by.gene$dS <- dNdS.by.gene$uS / dNdS.by.gene$ueS
-dNdS.by.gene$dN <- dNdS.by.gene$uN / dNdS.by.gene$ueN
+dNdS.by.gene$dS <- dNdS.by.gene$S / dNdS.by.gene$synon.probability
+dNdS.by.gene$dN <- dNdS.by.gene$N / dNdS.by.gene$nonsynon.probability
 
-# Re-rank after subsetting uS
-dNdS.by.gene[uS>3,ranking.1:=rank(dNdS,ties.method="first")]
-dNdS.by.gene[uS>10,ranking.2:=rank(dNdS,ties.method="first")]
-dNdS.by.gene[uS>15,ranking.3:=rank(dNdS,ties.method="first")]
-dNdS.by.gene[uS>3 & uN>3,ranking.4:=rank(dNdS,ties.method="first")]
+# Re-rank after subsetting S
+dNdS.by.gene[S>3,ranking.1:=rank(odds.ratio,ties.method="first")]
+dNdS.by.gene[S>10,ranking.2:=rank(odds.ratio,ties.method="first")]
+dNdS.by.gene[S>15,ranking.3:=rank(odds.ratio,ties.method="first")]
+dNdS.by.gene[S>3 & N>3,ranking.4:=rank(odds.ratio,ties.method="first")]
 
 
 #########################
@@ -135,16 +127,17 @@ archive.file("results/results.pdf")
 pdf("results/results.pdf", width=16, height=9, onefile = TRUE)
 
 # Funnel plot
-ggplot(dNdS.by.gene, aes(total.mut,dNdS)) + 
+ggplot(dNdS.by.gene, aes(total.mut,odds.ratio)) + 
 	geom_point(aes(fill = is.significant, colour = is.interesting),shape = 21,stroke=1,alpha=0.8) + 
 	theme(legend.position="bottom") + 
 	scale_fill_manual(name="significant? (q<0.0025)",  values =c("black", "red")) + 
 	scale_colour_manual(name="interesting? (p<0.0067)",  values =c("black", "orange")) + 
 	scale_y_log10() + scale_x_log10() + labs(x="Total number of mutations per gene",y="n:s/N:S",title="Funnel Plot") + 
-	geom_label_repel(data = dNdS.by.gene[log(p.values)<(-5)][log(dNdS)<(-0.6) | log(dNdS)>0.6], aes(label = gene.name), size = 2, box.padding = unit(0.5, "lines"), point.padding = unit(0.1, "lines"), force=1,segment.size=0.2,segment.color="blue")
+	geom_label_repel(data = dNdS.by.gene[log(q.value)<(-6)][log(odds.ratio)<(-0.6) | log(odds.ratio)>0.6], aes(label = gene.name), size = 2, box.padding = unit(0.5, "lines"), point.padding = unit(0.1, "lines"), force=1,segment.size=0.2,segment.color="blue")
+dev.off()
 
 # Unannotated q value Volcano Plot
-ggplot(dNdS.by.gene, aes(log(dNdS,2),abs(log(q.values,10)))) + 
+ggplot(dNdS.by.gene, aes(log2.odds.ratio,abs(log(q.value,10)))) + 
 	geom_point(aes(colour = cancer.gene),alpha=0.3) + 
 	scale_colour_manual(name="In COSMIC cancer gene census?",  values =c("black", "red")) + 
 	theme(legend.position="bottom") + 
@@ -152,7 +145,7 @@ ggplot(dNdS.by.gene, aes(log(dNdS,2),abs(log(q.values,10)))) +
 	labs(x=bquote(log[2]*'(n:s/N:S) / Fold Change'),y=bquote('Negative-'*log[10]~'q-values'),title="Volcano Plot")
 
 # Annotated q value Volcano Plot
-ggplot(dNdS.by.gene, aes(log(dNdS,2),abs(log(q.values,10)))) + 
+ggplot(dNdS.by.gene, aes(log2.odds.ratio,abs(log(q.value,10)))) + 
 	geom_point(aes(colour = cancer.gene),alpha=0.3) + 
 	scale_colour_manual(name="In COSMIC cancer gene census?",  values =c("black", "red")) + 
 	theme(legend.position="bottom") + 
@@ -162,10 +155,10 @@ ggplot(dNdS.by.gene, aes(log(dNdS,2),abs(log(q.values,10)))) +
 	geom_segment(color = "red",linetype=2,aes(x=0.85,xend=00.85,y=2.6,yend=300)) + 
 	geom_segment(color = "red",linetype=2,aes(x=-0.85,xend=-5,y=2.6,yend=2.6)) + 
 	geom_segment(color = "red",linetype=2,aes(x=-0.85,xend=-0.85,y=2.6,yend=300)) + 
-	geom_label_repel(data = dNdS.by.gene[log(q.values)<(-6)][log(dNdS)<(-0.6) | log(dNdS)>0.6], aes(label = gene.name), size = 2, box.padding = unit(0.5, "lines"), point.padding = unit(0.1, "lines"), force=1,segment.size=0.2,segment.color="blue")
+	geom_label_repel(data = dNdS.by.gene[log(q.value)<(-6)][log(odds.ratio)<(-0.6) | log(odds.ratio)>0.6], aes(label = gene.name), size = 2, box.padding = unit(0.5, "lines"), point.padding = unit(0.1, "lines"), force=1,segment.size=0.2,segment.color="blue")
 
 # Unannotated P value Volcano Plot
-ggplot(dNdS.by.gene, aes(log(dNdS,2),abs(log(p.values,10)))) + 
+ggplot(dNdS.by.gene, aes(log2.odds.ratio,abs(log(p.value,10)))) + 
 	geom_point(aes(colour = cancer.gene),alpha=0.3) + 
 	scale_colour_manual(name="In COSMIC cancer gene census?",  values =c("black", "red")) + 
 	theme(legend.position="bottom") + 
@@ -173,7 +166,7 @@ ggplot(dNdS.by.gene, aes(log(dNdS,2),abs(log(p.values,10)))) +
 	labs(x=bquote(log[2]*'(n:s/N:S) / Fold Change'),y=bquote('Negative-'*log[10]~'q-values'),title="Volcano Plot")
 
 # Annotated P value Volcano Plot
-ggplot(dNdS.by.gene, aes(log(dNdS,2),abs(log(p.values,10)))) + 
+ggplot(dNdS.by.gene, aes(log2.odds.ratio,abs(log(p.value,10)))) + 
 	geom_point(aes(colour = cancer.gene),alpha=0.3) + 
 	scale_colour_manual(name="In COSMIC cancer gene census?",  values =c("black", "red")) + 
 	theme(legend.position="bottom") + 
@@ -183,25 +176,25 @@ ggplot(dNdS.by.gene, aes(log(dNdS,2),abs(log(p.values,10)))) +
 	geom_segment(color = "red",linetype=2,aes(x=0.85,xend=0.85,y=2.6,yend=300)) + 
 	geom_segment(color = "red",linetype=2,aes(x=-0.85,xend=-5,y=2.6,yend=2.6)) + 
 	geom_segment(color = "red",linetype=2,aes(x=-0.85,xend=-0.85,y=2.6,yend=300)) + 
-	geom_label_repel(data = dNdS.by.gene[log(p.values)<(-5)][log(dNdS)<(-0.6) | log(dNdS)>0.6], aes(label = gene.name), size = 2, box.padding = unit(0.5, "lines"), point.padding = unit(0.1, "lines"), force=1,segment.size=0.2,segment.color="blue")
+	geom_label_repel(data = dNdS.by.gene[log(p.value)<(-5)][log(odds.ratio)<(-0.6) | log(odds.ratio)>0.6], aes(label = gene.name), size = 2, box.padding = unit(0.5, "lines"), point.padding = unit(0.1, "lines"), force=1,segment.size=0.2,segment.color="blue")
 
 #####################
 # TODO: CONFIDENCE INTERVALS?
 
-print(paste("All genes in top reigon:",nrow(dNdS.by.gene[log(q.values)<(-6) & log(dNdS)>0.6])))
+print(paste("All genes in top reigon:",nrow(dNdS.by.gene[log(q.value)<(-6) & log(odds.ratio)>0.6])))
 print(paste("Total Vogelstein cancer genes:",sum(dNdS.by.gene$cancer.gene.vogelstein)))
-print(paste("Vogelstein cancer genes in top reigon:",sum(dNdS.by.gene[log(q.values)<(-6) & log(dNdS)>0.6]$cancer.gene.vogelstein)))
+print(paste("Vogelstein cancer genes in top reigon:",sum(dNdS.by.gene[log(q.value)<(-6) & log(odds.ratio)>0.6]$cancer.gene.vogelstein)))
 print(paste("Total cancer genes:",sum(dNdS.by.gene$cancer.gene)))
-print(paste("Cancer genes in top reigon:",sum(dNdS.by.gene[log(q.values)<(-6) & log(dNdS)>0.6]$cancer.gene)))
+print(paste("Cancer genes in top reigon:",sum(dNdS.by.gene[log(q.value)<(-6) & log(odds.ratio)>0.6]$cancer.gene)))
 
 # S Histogram (Background mutation rate power)
-ggplot(dNdS.by.gene, aes(uS)) + 
+ggplot(dNdS.by.gene, aes(S)) + 
 	geom_histogram(binwidth = 1) + 
 	scale_x_continuous(limits = c(0, 100)) + 
 	labs(x="mean synonymous mutations per gene",title="Distribution of S per gene")
 
-# N Histogram (Background mutation rate power)
-ggplot(dNdS.by.gene, aes(uN)) + 
+# N Histogram
+ggplot(dNdS.by.gene, aes(N)) + 
 	geom_histogram(binwidth = 1) + 
 	scale_x_continuous(limits = c(0, 100)) + 
 	labs(x="mean nonsynonymous mutations per gene",title="Distribution of N per gene")
@@ -224,65 +217,65 @@ ggplot(dNdS.by.gene, aes(ranking.1, dS)) +
 	geom_point(alpha=0.3) + 
 	geom_smooth() + 
 	ylim(0,750) + 
-	labs(title="dS by ranking for uS>3") + 
+	labs(title="dS by ranking for S>3") + 
 	annotate("text", x = 1000, y=0, label = paste(nrow(dNdS.by.gene[is.na(ranking.1)==FALSE]),"genes"))
 
 ggplot(dNdS.by.gene, aes(ranking.4, dS)) + 
 	geom_point(alpha=0.3) + 
 	geom_smooth() + 
 	ylim(0,750) + 
-	labs(title="dS by ranking for uS>3 & uN>3") + 
+	labs(title="dS by ranking for S>3 & N>3") + 
 	annotate("text", x = 1000, y=0, label = paste(nrow(dNdS.by.gene[is.na(ranking.4)==FALSE]),"genes"))
 
 ggplot(dNdS.by.gene, aes(ranking.2, dS)) + 
 	geom_point(alpha=0.3) + 
 	geom_smooth() + 
 	ylim(0,750) + 
-	labs(title="dS by ranking for uS>10") + 
+	labs(title="dS by ranking for S>10") + 
 	annotate("text", x = 1000, y=0, label = paste(nrow(dNdS.by.gene[is.na(ranking.2)==FALSE]),"genes"))
 
 ggplot(dNdS.by.gene, aes(ranking.3, dS)) + 
 	geom_point(alpha=0.3) + 
 	geom_smooth() + 
 	ylim(0,750) + 
-	labs(title="dS by ranking for uS>15") + 
+	labs(title="dS by ranking for S>15") + 
 	annotate("text", x = 1000, y=0, label = paste(nrow(dNdS.by.gene[is.na(ranking.3)==FALSE]),"genes"))
 
 
-# Funnel plot (uS by dNdS)
-# with uS as 'study size' (size approximating power which is background mutation rate, more than just cds_length)
+# Funnel plot (S by dNdS)
+# with S as 'study size' (size approximating power which is background mutation rate, more than just cds_length)
 up.conf <- function(x) {(5/(x+3))+0.1}
 up.conf.l <- function(x) {(5/(x+3))+0.12}
 
 low.conf <- function(x) {(-7/(x+2))-0.3}
 low.conf.l <- function(x) {(-7/(x+2))-0.3}
 
-ggplot(dNdS.by.gene[is.finite(Log.dNdS)], aes(uS,Log.dNdS)) + 
+ggplot(dNdS.by.gene[is.finite(log2.odds.ratio)], aes(S,log2.odds.ratio)) + 
 	geom_point(aes(colour = cancer.gene),alpha=0.3) + 
 	xlim(0,100) + 
 	ylim(-1.6,+2.1) + 
 	scale_colour_manual(name="In COSMIC cancer gene census?",  values =c("black", "red")) + 
 	theme(legend.position="bottom") + stat_function(fun = up.conf)+ 
 	stat_function(fun = low.conf) + 
-	geom_label_repel(data = dNdS.by.gene[is.finite(Log.dNdS)][Log.dNdS<low.conf.l(uS) | Log.dNdS>up.conf.l(uS)], aes(label = gene.name), size = 2, box.padding = unit(0.5, "lines"), point.padding = unit(0.1, "lines"), force=1,segment.size=0.2,segment.color="blue")
+	geom_label_repel(data = dNdS.by.gene[is.finite(log2.odds.ratio)][log2.odds.ratio<low.conf.l(S) | log2.odds.ratio>up.conf.l(S)], aes(label = gene.name), size = 2, box.padding = unit(0.5, "lines"), point.padding = unit(0.1, "lines"), force=1,segment.size=0.2,segment.color="blue")
 
 print(paste("Total Vogelstein cancer genes:",sum(dNdS.by.gene$cancer.gene.vogelstein)))
-print(paste("Vogelstein cancer genes in top reigon:",sum(dNdS.by.gene[Log.dNdS>up.conf(uS)]$cancer.gene.vogelstein)))
-print(paste("All genes in top reigon:",nrow(dNdS.by.gene[Log.dNdS>up.conf(uS)])))
+print(paste("Vogelstein cancer genes in top reigon:",sum(dNdS.by.gene[log2.odds.ratio>up.conf(S)]$cancer.gene.vogelstein)))
+print(paste("All genes in top reigon:",nrow(dNdS.by.gene[log2.odds.ratio>up.conf(S)])))
 print(paste("Total cancer genes:",sum(dNdS.by.gene$cancer.gene)))
-print(paste("Cancer genes in top reigon:",sum(dNdS.by.gene[Log.dNdS>up.conf(uS)]$cancer.gene)))
+print(paste("Cancer genes in top reigon:",sum(dNdS.by.gene[log2.odds.ratio>up.conf(S)]$cancer.gene)))
 
 
 # Order chromosomes
 dNdS.by.gene$chromosome <- factor(dNdS.by.gene$chromosome, levels = c(1:22,"X","Y","MT"))
 
 # Graphs of dNdS by chromosome position
-ggplot(dNdS.by.gene, aes(chromosome.start, Log.dNdS)) + 
+ggplot(dNdS.by.gene, aes(chromosome.start, log2.odds.ratio)) + 
 	geom_point(alpha=0.3,size=0.05) + 
 	facet_wrap(~chromosome,scales="free_x")
 
 # Overall Dist
-ggplot(dNdS.by.gene[uS>3], aes(dNdS)) + 
+ggplot(dNdS.by.gene[S>3], aes(odds.ratio)) + 
 	geom_histogram(binwidth = 0.01) + 
 	geom_vline(xintercept = 1,color = "red") + 
 	theme_grey(base_size = 30) + 
@@ -291,22 +284,22 @@ ggplot(dNdS.by.gene[uS>3], aes(dNdS)) +
 
 # Fit data to students-t and normal dist
 library(MASS)
-paramst <- as.list(MASS::fitdistr(dNdS.by.gene[is.finite(Log.dNdS),Log.dNdS], "t")$estimate)
-paramsn <- as.list(MASS::fitdistr(dNdS.by.gene[is.finite(Log.dNdS),Log.dNdS], "normal")$estimate)
+paramst <- as.list(MASS::fitdistr(dNdS.by.gene[is.finite(log2.odds.ratio),log2.odds.ratio], "t")$estimate)
+paramsn <- as.list(MASS::fitdistr(dNdS.by.gene[is.finite(log2.odds.ratio),log2.odds.ratio], "normal")$estimate)
 
 # QQ plot t dist
-ggplot(dNdS.by.gene, aes(sample = Log.dNdS)) + 
+ggplot(dNdS.by.gene, aes(sample = log2.odds.ratio)) + 
 	stat_qq(distribution = qt, dparams = paramst["df"])+ 
 	labs(title="QQ plot, students-t distribution")
 
 # QQ plot normal dist
-ggplot(dNdS.by.gene, aes(sample = Log.dNdS)) + 
+ggplot(dNdS.by.gene, aes(sample = log2.odds.ratio)) + 
 	stat_qq(distribution = qnorm, dparams = paramsn)+ 
 	labs(title="QQ plot, normal distribution")
 
 library(metRology)
 # Fitting t dist over actual, args from paramst
-ggplot(dNdS.by.gene, aes(Log.dNdS)) + 
+ggplot(dNdS.by.gene, aes(log2.odds.ratio)) + 
 	geom_histogram(aes(y=..density..),binwidth=0.01) + 
 	geom_vline(xintercept = 0,color = "blue") + 
 	theme_grey(base_size = 30) + 
@@ -314,10 +307,10 @@ ggplot(dNdS.by.gene, aes(Log.dNdS)) +
 	stat_function(geom = "line", fun = dt.scaled, arg = list(df = paramst$df, mean = paramst$m, sd = paramst$s), colour = "red") + 
 	annotate("text", x = 1, y=2.5, label = paste("df:",signif(paramst$df,3),"\n Mean: ",signif(paramst$m,3),"\n sd:",signif(paramst$s,3)))
 
-print(paste("T-distribution parameters (of Log.dNdS): df:",signif(paramst$df,3),"\n Mean: ",signif(paramst$m,3)))
+print(paste("T-distribution parameters (of log2.odds.ratio): df:",signif(paramst$df,3),"\n Mean: ",signif(paramst$m,3)))
 
 # Cancer vs normal density dist
-ggplot(dNdS.by.gene[uS>3], aes(x=dNdS,fill=cancer.gene.vogelstein)) + 
+ggplot(dNdS.by.gene[S>3], aes(x=odds.ratio,fill=cancer.gene.vogelstein)) + 
 	geom_density(alpha=0.3) + 
 	geom_vline(xintercept = 1,color = "red") + 
 	theme_grey(base_size = 30) + 
@@ -326,7 +319,7 @@ ggplot(dNdS.by.gene[uS>3], aes(x=dNdS,fill=cancer.gene.vogelstein)) +
 	theme(legend.position="bottom")
 
 # Cancer gene dist TSG vs Onco vs normal
-ggplot(dNdS.by.gene[uS>3], aes(x=dNdS,fill=classification)) + 
+ggplot(dNdS.by.gene[S>3], aes(x=odds.ratio,fill=classification)) + 
 	geom_density(alpha=0.3) + 
 	geom_vline(xintercept = 1,color = "red") + 
 	theme_grey(base_size = 30) + 
@@ -335,24 +328,24 @@ ggplot(dNdS.by.gene[uS>3], aes(x=dNdS,fill=classification)) +
 	theme(legend.position="bottom")
 
 # Ranked points graph (sideways S)
-ggplot(dNdS.by.gene[uS>3], aes(x=ranking,y=dNdS)) + 
+ggplot(dNdS.by.gene[S>3], aes(x=ranking,y=odds.ratio)) + 
 	geom_point(aes(colour = cancer.gene),alpha=0.3,shape=21,size=0.5)  + 
 	geom_hline(yintercept = 1,color = "red") + 
 	scale_y_log10() + 
 	xlim(-700,20000)+ 
 	theme_grey(base_size = 10) +  
-	geom_text_repel(data = subset(dNdS.by.gene[uS>3], dNdS>4.25 | dNdS<0.12), aes(label = gene.name), size = 2, box.padding = unit(0.5, "lines"), point.padding = unit(0.1, "lines"), force=1,segment.size=0.2) + 
+	geom_text_repel(data = subset(dNdS.by.gene[S>3], odds.ratio>4.25 | odds.ratio<0.12), aes(label = gene.name), size = 2, box.padding = unit(0.5, "lines"), point.padding = unit(0.1, "lines"), force=1,segment.size=0.2) + 
 	scale_colour_manual(name="In COSMIC cancer gene census?",  values =c("black", "red")) + labs(y="mean dN/dS per gene",title="Overall Distribution") + theme(legend.position="bottom")  
 
 dev.off()
 
 # Bottom 100 Hits (by p-value)
-bottom <- dNdS.by.gene[order(p.values)][dNdS<1,.(gene.name,uS,uN,dNdS,p.values,q.values,cancer.gene,mappability,ranking,expression.percent.rank,cancer.gene.vogelstein)][1:100]
+bottom <- dNdS.by.gene[order(p.value)][odds.ratio<1,.(gene.name,S,N,odds.ratio,p.value,q.value,cancer.gene,mappability,ranking,expression.percent.rank,cancer.gene.vogelstein)][1:100]
 
 
 
 # Top 100 Hits (by p-value)
-top <- dNdS.by.gene[order(p.values)][dNdS>1,.(gene.name,uS,uN,dNdS,p.values,q.values,cancer.gene,mappability,ranking,expression.percent.rank,cancer.gene.vogelstein)][1:100]
+top <- dNdS.by.gene[order(p.value)][odds.ratio>1,.(gene.name,S,N,odds.ratio,p.value,q.value,cancer.gene,mappability,ranking,expression.percent.rank,cancer.gene.vogelstein)][1:100]
 
 # Save whole table
 archive.file("results/dNdS.tsv")
