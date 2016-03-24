@@ -24,10 +24,10 @@ single.base.coding.substitutions <- readRDS("data/single.base.coding.substitutio
 
 single.base.coding.substitutions[,.N,by=project_code]
 single.base.coding.substitutions[,.N,by=mutation_type]
-single.base.coding.substitutions[,.N,by=consequence_type]
+single.base.coding.substitutions[,.N,by=variant.class]
 single.base.coding.substitutions[,.N,by=sequencing_strategy]
 
-# Remove duplicate annotations (1mut:>1annot due to multiple transcripts)
+# Remove duplicate annotations (1mut:>1annot due to multiple transcripts and overlapping exons! e.g. PCDHG, PCDHA, RP11, UGT1A, PRAME, CTC-)
 # Warning, 1 base can mutate to 2 different bases in same patient - use mut_id not position
 setkey(single.base.coding.substitutions,icgc_donor_id,icgc_mutation_id)
 single.base.coding.substitutions <- unique(single.base.coding.substitutions)
@@ -88,10 +88,6 @@ motif.probabilities <- trimer.count.by.project[motif.probabilities]
 # Calculate mutation "probability"
 motif.probabilities$mutation.probability <- motif.probabilities$mutation_count / motif.probabilities$total.count
 
-
-# number of somatic coding mutations per donor
-hist(single.base.coding.substitutions[,.N,by=icgc_donor_id][order(N)]$N,breaks=3000,xlim=c(0,500))
-dev.off()
 
 w_df = melt(motif.matrix.count, varnames = c("motif", "sample"))
     w_df$alteration = sub("([ACGTN])([ACGTN]) .+", "\\1>\\2", w_df$motif)
