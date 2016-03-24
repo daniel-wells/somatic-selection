@@ -203,6 +203,8 @@ write.table(expected_variants.pancancer[order(p.value)], "data/dNdS_pancancer.ts
 # remove non-numeric to get nt position of mut
 observed_variants[,cds_position:=as.numeric(gsub("[^0-9]","",cds_mutation))]
 
+library(ggplot2)
+
 plot.mutdist <- function(transcript.list){
 ggplot(observed_variants[Ensembl.Transcript.ID %in% transcript.list & variant.class=="synonymous_variant",.(cds_position,Associated.Gene.Name)], aes(cds_position)) + 
 	geom_histogram() + 
@@ -219,9 +221,9 @@ ggplot(observed_variants[Ensembl.Transcript.ID %in% transcript.list & variant.cl
 	# todo add colour = $is.synonymous
 }
 
-transcript.list <- observed_variants[order(p.value)][odds.ratio<1][1:36]$Ensembl.Transcript.ID
+transcript.list <- expected_variants.pancancer[order(p.value)][odds.ratio<1][1:36]$Ensembl.Transcript.ID
 
-transcript.list.top <- observed_variants[order(p.value)][odds.ratio>1][1:36]$Ensembl.Transcript.ID
+transcript.list.top <- expected_variants.pancancer[order(p.value)][odds.ratio>1][1:36]$Ensembl.Transcript.ID
 
 
 pdf("results/QC_mutation_distribution.pdf",width=16, height=9, onefile = TRUE)
