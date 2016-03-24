@@ -6,16 +6,8 @@ sink(logfile, type="message")
 source("code/functions.R")
 library(data.table)
 
-observed_variants <- readRDS("data/coding.mutations.rds")
-
-# "gene.id" -> "gene_affected"
-# "transcript.id" -> "transcript_affected"
-# "variant.class" -> "consequence_type"
-setnames(observed_variants,c("icgc_mutation_id","icgc_donor_id","project_code","chromosome","chromosome_start","chromosome_end","chromosome_strand","mutation_type","reference_genome_allele","mutated_from_allele","mutated_to_allele","variant.class","aa_mutation","cds_mutation","gene.id","transcript.id","sequencing_strategy"))
-
-# columns removed in load_mutations.R creating duplicate rows
-setkey(observed_variants,icgc_mutation_id,icgc_donor_id,transcript.id)
-observed_variants <- unique(observed_variants)
+observed_variants <- readRDS("data/coding.mutations.filtered.rds")
+setkey(observed_variants,icgc_mutation_id,icgc_donor_id,Ensembl.Transcript.ID)
 
 print("observed_variants summary:")
 print(summary(observed_variants))
@@ -36,18 +28,18 @@ observed_variants <- project.groupings[observed_variants]
 observed_variants[,.N,by=project_code][order(-N)]
 observed_variants[,.N,by=primary_site][order(-N)]
 
-observed_variants[,transcript.id:=as.character(transcript.id)]
-setkey(observed_variants,icgc_mutation_id,icgc_donor_id,transcript.id)
+observed_variants[,Ensembl.Transcript.ID:=as.character(Ensembl.Transcript.ID)]
+setkey(observed_variants,icgc_mutation_id,icgc_donor_id,Ensembl.Transcript.ID)
 
 # Check number of each variant.class
 observed_variants[,.N,by=variant.class][order(-N)]
 
-synon.count <- observed_variants[variant.class=="synonymous_variant",.("S"=.N), by=list(transcript.id,project_code)]
+synon.count <- observed_variants[variant.class=="synonymous_variant",.("S"=.N), by=list(Ensembl.Transcript.ID,project_code)]
 
-nonsynon.count <- observed_variants[variant.class %in% c("missense_variant","frameshift_variant","disruptive_inframe_deletion","disruptive_inframe_insertion","inframe_deletion","inframe_insertion","start_lost","stop_lost","stop_gained"), .("N"=.N), by=list(transcript.id,project_code)]
+nonsynon.count <- observed_variants[variant.class %in% c("missense_variant","frameshift_variant","disruptive_inframe_deletion","disruptive_inframe_insertion","inframe_deletion","inframe_insertion","start_lost","stop_lost","stop_gained"), .("N"=.N), by=list(Ensembl.Transcript.ID,project_code)]
 
-setkey(synon.count,transcript.id,project_code)
-setkey(nonsynon.count,transcript.id,project_code)
+setkey(synon.count,Ensembl.Transcript.ID,project_code)
+setkey(nonsynon.count,Ensembl.Transcript.ID,project_code)
 
 # Full outer join
 counts <- merge(synon.count,nonsynon.count, all=TRUE)
@@ -73,7 +65,7 @@ print("Counts by project summary:")
 print(summary(counts))
 
 # counts by primary site
-counts.bysite <- counts[,.(S=sum(S),N=sum(N)),by=.(primary_site,transcript.id)]
+counts.bysite <- counts[,.(S=sum(S),N=sum(N)),by=.(primary_site,Ensembl.Transcript.ID)]
 
 print("Counts by site summary:")
 print(summary(counts.bysite))
@@ -81,7 +73,7 @@ print(paste(nrow(counts.bysite[S==0]),"site-transcripts with synon count of 0"))
 print(paste(nrow(counts.bysite[N==0]),"site-transcripts with nonsynon count of 0"))
 
 # counts overall
-counts.pancancer <- counts[,.(S=sum(S),N=sum(N)),by=transcript.id]
+counts.pancancer <- counts[,.(S=sum(S),N=sum(N)),by=Ensembl.Transcript.ID]
 
 print("Counts pancancer summary:")
 print(summary(counts.pancancer))
@@ -95,31 +87,31 @@ print(paste(nrow(expected_variants),"expected variants per transcript loaded"))
 # Add project grouping information
 setkey(expected_variants, project_code)
 expected_variants <- project.groupings[expected_variants]
-setkey(expected_variants,transcript.id,primary_site)
+setkey(expected_variants,Ensembl.Transcript.ID,primary_site)
 
 print("expected_variants summary:")
 print(summary(expected_variants))
 
 # aggregate by primary_site
-expected_variants.bysite <- unique(expected_variants[,.(nonsynon.probability=sum(nonsynon.probability),synon.probability=sum(synon.probability),cds.length,chromosome,chromosome.start,chromosome.stop,Ensembl.Gene.ID,mappability,Associated.Gene.Name),by=.(transcript.id,primary_site)])
+expected_variants.bysite <- unique(expected_variants[,.(nonsynon.probability=sum(nonsynon.probability),synon.probability=sum(synon.probability),cds.length,chromosome,chromosome.start,chromosome.stop,Ensembl.Gene.ID,Associated.Gene.Name),by=.(Ensembl.Transcript.ID,primary_site)])
 
 # aggregate over all cancers
-expected_variants.pancancer <- unique(expected_variants[,.(nonsynon.probability=sum(nonsynon.probability),synon.probability=sum(synon.probability),cds.length,chromosome,chromosome.start,chromosome.stop,Ensembl.Gene.ID,mappability,Associated.Gene.Name),by=transcript.id])
+expected_variants.pancancer <- unique(expected_variants[,.(nonsynon.probability=sum(nonsynon.probability),synon.probability=sum(synon.probability),cds.length,chromosome,chromosome.start,chromosome.stop,Ensembl.Gene.ID,Associated.Gene.Name),by=Ensembl.Transcript.ID])
 
 # Join expected with actual counts
-setkey(expected_variants,transcript.id,project_code)
-setkey(counts,transcript.id,project_code)
+setkey(expected_variants,Ensembl.Transcript.ID,project_code)
+setkey(counts,Ensembl.Transcript.ID,project_code)
 # All rows in counts with rows from expected_variants which match
 expected_variants.byproject <- expected_variants[counts,nomatch=0]
 # some transcripts with observed variations do not have calculated nonsynon sites due to N or not multiple of 3, generating NA in e.g. chromosome column as these transcripts were not passed through to N per transcript. Inner Join
 print(paste(nrow(expected_variants.byproject),"expected variants per project-transcript with measured actual variants"))
 
-setkey(expected_variants.bysite,transcript.id,primary_site)
-setkey(counts.bysite,transcript.id,primary_site)
+setkey(expected_variants.bysite,Ensembl.Transcript.ID,primary_site)
+setkey(counts.bysite,Ensembl.Transcript.ID,primary_site)
 expected_variants.bysite <- expected_variants.bysite[counts.bysite,nomatch=0]
 
-setkey(expected_variants.pancancer,transcript.id)
-setkey(counts.pancancer,transcript.id)
+setkey(expected_variants.pancancer,Ensembl.Transcript.ID)
+setkey(counts.pancancer,Ensembl.Transcript.ID)
 expected_variants.pancancer <- expected_variants.pancancer[counts.pancancer,nomatch=0]
 
 # Calculate dNdS
