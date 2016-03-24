@@ -86,12 +86,16 @@ data/RNAseq.by.gene.tsv: code/expression_analysis.R data/tgca_RNAseq.total.tsv
 #######
 
 # Load/filter Mutations
-data/single.base.coding.substitutions.rds data/coding.mutations.rds data/observed.transcripts.rds: code/load_mutations.R
+data/coding.mutations%rds data/observed.transcripts%rds: code/load_mutations.R
 	Rscript code/load_mutations.R
 
 # Choose which transcripts to use
-data/final.transcript.list.rds: code/filter_transcripts.R data/observed.transcripts.rds data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz data/raw/mart_export.txt.gz data/raw/exons.hg19.mappability100.bed.gz
+data/final.transcript.list.rds: code/filter_transcripts.R data/observed.transcripts.rds data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz data/raw/mart_export.txt.gz
 	Rscript filter_transcripts.R
+
+# Filter variants
+data/coding.mutations.filtered%rds data/single.base.coding.substitutions%rds: code/filter_variants.R data/coding.mutations.rds data/raw/mappability_100bp_windows_exons.bed.gz data/final.transcript.list.rds
+	Rscript code/filter_variants.R
 
 # Count trimers
 data/coding.trimer.counts.rds: code/trimerise_codome.R data/final.transcript.list.rds data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz
@@ -116,7 +120,7 @@ data/expected_variants_per_transcript.tsv: code/calculate_expected_variants.R da
 #######
 
 # Join expected and actual N & S, calculate odds ratio and p-values
-data/dNdS_byproject.tsv data/dNdS_bysite.tsv data/dNdS_pancancer.tsv: code/calculate_dNdS.R data/expected_variants_per_transcript.tsv data/coding.mutations.rds
+data/dNdS_byproject%tsv data/dNdS_bysite%tsv data/dNdS_pancancer%tsv: code/calculate_dNdS.R data/expected_variants_per_transcript.tsv data/coding.mutations.filtered.rds
 	Rscript code/calculate_dNdS.R
 
 # Plot results

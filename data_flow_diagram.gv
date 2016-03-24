@@ -10,6 +10,7 @@ digraph dfd2{
 
         expected [label="expected_variants_per_transcript.tsv" shape=box, style=filled, fillcolor=lightblue];
         observed [label="coding.mutations.rds" shape=box, style=filled, fillcolor=lightblue];
+		filteredObserved [label="coding.mutations.filtered.rds" shape=box, style=filled, fillcolor=lightblue];
         dndsTranscript [label="dNdS_by_transcript.tsv" shape=box, style=filled, fillcolor=lightblue];
         dndsgene [label="dNdS_by_gene.tsv" shape=box, style=filled, fillcolor=green];
         graphs [label="Graphs.pdf" shape=box, style=filled, fillcolor=green];
@@ -32,6 +33,7 @@ digraph dfd2{
 		load [label="{load_mutations.R}" shape=Mrecord];
         calcProfile [label="{calculate_mutation_profiles.R}" shape=Mrecord];
 		filterTranscripts [label="{filter_transcripts.R}" shape=Mrecord];
+		filterVariants [label="{filter_variants.R}" shape=Mrecord];
         }
 		
 		subgraph cluster_level3{
@@ -47,7 +49,7 @@ digraph dfd2{
 
        subgraph cluster_level1{
                 	label ="Annotations" rank="max";
-				mappability [label="exons.hg19.mappability100.bed.gz" shape=box, style=filled, fillcolor=yellow];
+				mappability [label="mappability_100bp_windows_exons.bed.gz" shape=box, style=filled, fillcolor=yellow];
         		biomart [label="Biomart Export" shape=box, style=filled, fillcolor=yellow];
 	        	vogelstein [label="Vogelstein Cancer List" shape=box, style=filled, fillcolor=yellow];
 	        	cosmic [label="COSMIC Cancer List" shape=box, style=filled, fillcolor=yellow];
@@ -78,7 +80,7 @@ digraph dfd2{
 	MakeDownload -> {fasta, ICGCindiv, biomart, vogelstein, rna, mappability, cosmic, hgnc}
 	
 	# Load mutations
-	ICGCindiv -> load -> {singleBaseCodingSubs,observed,aggMut,observedTranscripts}
+	ICGCindiv -> load -> {observed,aggMut,observedTranscripts}
 	
 	# Calculate substitution 'matrix'
 	{singleBaseCodingSubs,trimerCounts} -> calcProfile -> motifProbs
@@ -86,13 +88,16 @@ digraph dfd2{
 	# Calculate expected ratio of N:S
 	{fasta,motifProbs,transcriptList} -> calcExpected -> expected
 	
-	{expected,observed} -> calcdnds -> dndsTranscript -> analysednds -> {graphs dndsgene}
+	{expected,filteredObserved} -> calcdnds -> dndsTranscript -> analysednds -> {graphs dndsgene}
 	
 	# Ensembl Fasta
 	{fasta,transcriptList} -> trimerise -> {codome,trimerCounts}
 	
-	# Filter
-	{fasta,observedTranscripts,mappability,biomart} -> filterTranscripts -> transcriptList
+	# Filter transcripts
+	{fasta,observedTranscripts,biomart} -> filterTranscripts -> transcriptList
+	
+	# Filter variants
+	{mappability,transcriptList,observed} -> filterVariants -> {singleBaseCodingSubs,filteredObserved}
 	
 	# Create random genomes and calculate Pvalues
 	{codome,motifProbs} -> randomise -> randomisedRaw -> mergeRandom -> randomAggregated -> calculateP -> pvalues -> analysednds
