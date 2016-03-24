@@ -161,7 +161,7 @@ print("Tidying and saving data")
 nonsynon.count.dt <- rbindlist(nonsynon.count)
 
 # Split attributes
-nonsynon.count.dt[, c("transcript.id","cds.type","chromosome","gene.id","gene.biotype","transcript.biotype") := tstrsplit(attributes, " ", fixed=TRUE)]
+nonsynon.count.dt[, c("Ensembl.Transcript.ID","cds.type","chromosome","gene.id","gene.biotype","transcript.biotype") := tstrsplit(attributes, " ", fixed=TRUE)]
 # remove old column
 nonsynon.count.dt$attributes <- NULL
 
@@ -184,7 +184,7 @@ print(paste(nrow(nonsynon.count.dt),"rows in final table"))
 
 # Add gene.name, mappability, cds length, gene.id
 setkey(unique,Ensembl.Transcript.ID)
-setkey(nonsynon.count.dt,transcript.id)
+setkey(nonsynon.count.dt,Ensembl.Transcript.ID)
 
 nonsynon.count.dt <- nonsynon.count.dt[unique[,.(Ensembl.Transcript.ID,Ensembl.Gene.ID,Associated.Gene.Name)]][!is.na(project_code)]
 
