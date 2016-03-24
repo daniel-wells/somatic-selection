@@ -186,7 +186,7 @@ print(paste(nrow(nonsynon.count.dt),"rows in final table"))
 setkey(unique,Ensembl.Transcript.ID)
 setkey(nonsynon.count.dt,transcript.id)
 
-nonsynon.count.dt <- nonsynon.count.dt[unique[,.(Ensembl.Transcript.ID,"Ensembl.Gene.ID"=gene.id,mappability,Associated.Gene.Name)]][!is.na(project_code)]
+nonsynon.count.dt <- nonsynon.count.dt[unique[,.(Ensembl.Transcript.ID,Ensembl.Gene.ID,Associated.Gene.Name)]][!is.na(project_code)]
 
 # Save
 archive.file("data/expected_variants_per_transcript.tsv")
