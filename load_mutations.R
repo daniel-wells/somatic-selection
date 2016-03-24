@@ -27,6 +27,8 @@ mutations[, c("project_code","chromosome","chromosome_strand","mutation_type","c
 # Save all mutations as cache
 saveRDS(mutations,"data/simple.somatic.mutations.aggregated.rds",compress = FALSE)
 
+##### Filter mutations based on mappability #####
+
 # Save all coding substitutions
 coding.mutations <- mutations[consequence_type %in% c("missense_variant", "synonymous_variant", "frameshift_variant","disruptive_inframe_deletion","disruptive_inframe_insertion","inframe_deletion","inframe_insertion","start_lost","stop_lost","stop_gained","exon_loss_variant")]
 
@@ -37,15 +39,6 @@ setkey(coding.mutations,transcript_affected)
 observed.transcripts <- data.table("transcript.id"=as.character(unique(coding.mutations[,transcript_affected])))
 setkey(observed.transcripts,transcript.id)
 saveRDS(observed.transcripts,"data/observed.transcripts.rds",compress = FALSE)
-
-
-# Save single base coding substitutions
-single.base.coding.substitutions <- mutations[mutation_type=="single base substitution" & consequence_type %in% c("missense_variant", "synonymous_variant", "frameshift_variant","disruptive_inframe_deletion","disruptive_inframe_insertion","inframe_deletion","inframe_insertion","start_lost","stop_lost","stop_gained")]
-#4,649,834
-
-# Save single base, coding mutations
-archive.file("data/single.base.coding.substitutions.rds")
-saveRDS(single.base.coding.substitutions,"data/single.base.coding.substitutions.rds",compress = FALSE)
 
 sessionInfo()
 

@@ -17,6 +17,9 @@ updated.annotations <- fread(input = 'zcat < data/raw/mart_export.txt.gz')
 setnames(updated.annotations, make.names(names(updated.annotations)))
 setkey(updated.annotations,Ensembl.Transcript.ID)
 
+# setkey(observed_variants,transcript.id)
+# updated.annotations[observed_variants][!is.na(Ensembl.Gene.ID) & Transcript.type=="protein_coding"]
+
 # all rows in observed transcripts that have Gene.IDs in GRCh38 and are protein coding
 observed.transcripts <- updated.annotations[observed.transcripts][!is.na(Ensembl.Gene.ID) & Transcript.type=="protein_coding"]
 print(paste(nrow(observed.transcripts),"observed unique transcripts that still exist and are protein coding"))
@@ -66,23 +69,6 @@ unique[Associated.Gene.Name %in% unique[duplicated(unique)]$Associated.Gene.Name
 setkey(unique,Associated.Gene.Name)
 unique <- unique(unique)
 print(paste(nrow(unique),"unique gene IDs mapped to transcripts"))
-
-###
-# Remove genes with poor average Alignability of 100mers (GEM from ENCODE/CRG(Guigo))
-blacklist <- fread('zcat < data/raw/exons.hg19.mappability100.bed.gz')
-setnames(blacklist,c("chromosome","start","end","exon","V5","strand","gene.id","gene.name","mappability"))
-
-blacklist <- blacklist[,.("mappability"=mean(mappability)),by=gene.id]
-
-# hist(blacklist$mappability,breaks=1000,ylim=c(0,500))
-
-# for each row in blacklist, add data from dNdS.by.gene
-setkey(unique,Ensembl.Gene.ID)
-setkey(blacklist,gene.id)
-
-unique <- blacklist[unique][mappability>0.75 | is.na(mappability)]
-print(paste(nrow(unique),"genes remaining with mappability >0.75"))
-print(paste(sum(unique$cds.length),"total nucleotides"))
 
 archive.file("data/final.transcript.list.rds")
 saveRDS(unique,"data/final.transcript.list.rds",compress=FALSE)
