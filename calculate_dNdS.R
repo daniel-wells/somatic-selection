@@ -196,6 +196,42 @@ write.table(expected_variants.bysite[order(p.value)], "data/dNdS_bysite.tsv", se
 archive.file("data/dNdS_pancancer.tsv")
 write.table(expected_variants.pancancer[order(p.value)], "data/dNdS_pancancer.tsv", sep="\t", row.names=FALSE, quote=FALSE)
 
+
+
+################# Plot distribution of synon.variants ##################
+
+# remove non-numeric to get nt position of mut
+observed_variants[,cds_position:=as.numeric(gsub("[^0-9]","",cds_mutation))]
+
+plot.mutdist <- function(transcript.list){
+ggplot(observed_variants[Ensembl.Transcript.ID %in% transcript.list & variant.class=="synonymous_variant",.(cds_position,Associated.Gene.Name)], aes(cds_position)) + 
+	geom_histogram() + 
+	facet_wrap(~Associated.Gene.Name,scales="free") + 
+	labs(title="Distribution of Synonymous variants")
+	# todo add colour = $is.synonymous
+}
+
+plot.mutdist.N <- function(transcript.list){
+ggplot(observed_variants[Ensembl.Transcript.ID %in% transcript.list & variant.class!="synonymous_variant",.(cds_position,Associated.Gene.Name)], aes(cds_position)) + 
+	geom_histogram() + 
+	facet_wrap(~Associated.Gene.Name,scales="free") + 
+	labs(title="Distribution of Nonsynonymous variants")
+	# todo add colour = $is.synonymous
+}
+
+transcript.list <- observed_variants[order(p.value)][odds.ratio<1][1:36]$Ensembl.Transcript.ID
+
+transcript.list.top <- observed_variants[order(p.value)][odds.ratio>1][1:36]$Ensembl.Transcript.ID
+
+
+pdf("results/QC_mutation_distribution.pdf",width=16, height=9, onefile = TRUE)
+plot.mutdist(transcript.list.top)
+plot.mutdist(transcript.list)
+plot.mutdist.N(transcript.list.top)
+plot.mutdist.N(transcript.list)
+dev.off()
+
+
 sessionInfo()
 
 sink(type="message")
