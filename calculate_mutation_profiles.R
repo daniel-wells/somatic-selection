@@ -1,12 +1,17 @@
+# Start writing to an output file
+logfile <- file(paste("logs/calculate_mutation_profiles.R.log",format(Sys.time(), "%Y-%m-%d.%H-%M-%S"), "txt", sep = "."))
+sink(logfile)
+sink(logfile, type="message")
+
+source("code/functions.R")
+
 # source("http://bioconductor.org/biocLite.R")
 # biocLite("SomaticSignatures")
-# biocLite("VariantAnnotation")
-# biocLite("BSgenome")
 # biocLite("BSgenome.Hsapiens.UCSC.hg19")
-# biocLite("TxDb.Hsapiens.UCSC.hg19.knownGene")
 
 library(SomaticSignatures)
 library(data.table)
+library(ggplot2)
 
 ## Genomic sequences
 library(BSgenome.Hsapiens.UCSC.hg19)
@@ -92,8 +97,18 @@ w_df = melt(motif.matrix.count, varnames = c("motif", "sample"))
     w_df$alteration = sub("([ACGTN])([ACGTN]) .+", "\\1>\\2", w_df$motif)
     w_df$context = sub("[ACGTN][ACGTN] (.+)", "\\1", w_df$motif)
 
-pdf(width=20,height=60)
+archive.file("results/mutation_profiles_QC.pdf")
+pdf("results/mutation_profiles_QC.pdf",width=20, height=60, onefile = TRUE)
+# number of somatic coding mutations per donor
+hist(single.base.coding.substitutions[,.N,by=icgc_donor_id][order(N)]$N,breaks=3000,xlim=c(0,500))
+
 ggplot(w_df) + geom_bar(aes_string(x = "context", y = "value"), stat = "identity", position = "identity") + facet_grid(sample ~ alteration,scales="free_y")
 dev.off()
 
+archive.file("data/motif.probabilities.rds")
 saveRDS(motif.probabilities, "data/motif.probabilities.rds")
+
+sessionInfo()
+
+sink(type="message")
+sink()
