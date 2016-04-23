@@ -76,11 +76,11 @@ write.table(data.t, "data/power_analysis.tsv", sep="\t", row.names=FALSE, quote=
 
 library(ggplot2)
 archive.file("results/power_curve.pdf")
-pdf("results/power_curve.pdf", width=11.7, height=8.3, onefile = TRUE)
+pdf("results/power_curve.pdf", width=15, height=8, onefile = TRUE)
 ggplot(data.t,aes(total.mut,group=fold.change,color=log2.odd.ratio)) +
   geom_line(aes(y=power)) +
   ylim(0,1) +
-  theme(legend.position="bottom",text = element_text(size=15)) + 
+  theme(legend.position="bottom",text = element_text(size=17)) + 
   scale_colour_manual(name=bquote(Log[2]~'Odds Ratio'),  values =c("navy", "lightskyblue","peru","orangered")) +
   labs(x="Total number of mutations in a gene",y="Statistical Power")
 dev.off()
