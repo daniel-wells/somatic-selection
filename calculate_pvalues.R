@@ -32,21 +32,100 @@ random.dnds[is.na(S),S:=0]
 
 # Cache results
 saveRDS(random.dnds,"data/random.dnds.rds")
-random.dnds <- readRDS("data/random.dnds.rds")
+# random.dnds <- readRDS("data/random.dnds.rds")
 # library(data.table)
 
 setkey(random.dnds,transcript)
 
-# Calculate mean and sd of N and S per transcript
-dnds.stats <- random.dnds[,.("mean.N"=mean(N,na.rm = TRUE),"sd.N"=sd(N, na.rm = FALSE),"mean.S"=mean(S,na.rm = TRUE),"sd.S"=sd(S, na.rm = FALSE)),by=transcript]
+# Calculate mean of N and S per transcript
+dnds.stats <- random.dnds[,.("mean.N"=mean(N,na.rm = TRUE),"mean.S"=mean(S,na.rm = TRUE)),by=transcript]
+dnds.stats[,random.ratio:=mean.N/mean.S]
 
-cds <- fread("data/dNdS_by_transcript.tsv", header=TRUE)
 
-setkey(cds,Ensembl.Transcript.ID)
+dNdS.by.gene <- fread("data/dNdS_pancancer.tsv", header=TRUE)
+
+setkey(dNdS.by.gene,Ensembl.Transcript.ID)
 setkey(dnds.stats,transcript)
 
-# for every row in random.dnds add S and N from cds
-dnds.stats <- cds[dnds.stats,.(transcript,S,N,nonsynon.probability,synon.probability,mean.N,mean.S,sd.N,sd.S)]
+
+# for every row in random.dnds add S and N from dNdS.by.gene
+dnds.stats2 <- dNdS.by.gene[dnds.stats,.(transcript,S,N,nonsynon.probability,synon.probability,mean.N,mean.S,random.ratio,Associated.Gene.Name)][!is.na(S)]
+dnds.stats2[,observed.ratio:=N/S]
+dnds.stats2[,calculated.ratio:=nonsynon.probability/synon.probability]
+
+
+# Correlation between calculated and random odds
+archive.file("results/random_vs_calculated.pdf")
+pdf("results/random_vs_calculated.pdf", width=15, height=8, onefile = TRUE)
+ggplot(dnds.stats2, aes(random.ratio,calculated.ratio)) + 	geom_point(alpha=0.1,size=0.5) +
+	geom_abline(slope = 1,col="red",size=0.2) +
+	theme_grey(base_size = 17) + 
+	scale_x_log10(breaks=c(2:6)) +
+	scale_y_log10(breaks=c(2:6)) +
+	labs(x='Expected odds by shuffling',y='Expected odds by calculation')
+dev.off()
+
+
+# compare distributions of S and N seperately
+archive.file("results/QC_randomised.pdf")
+pdf("results/QC_randomised.pdf", width=15, height=8, onefile = TRUE)
+
+ggplot(dnds.stats2, aes(mean.S)) + geom_histogram(binwidth=1) + xlim(0,100)
+ggplot(dnds.stats2, aes(synon.probability)) + geom_histogram(binwidth=0.005)+ xlim(0,0.5)
+ggplot(dnds.stats2, aes(S)) + geom_histogram(binwidth=1) + xlim(0,100)
+ggplot(dnds.stats2, aes(mean.N)) + geom_histogram(binwidth=1) + xlim(0,150)
+ggplot(dnds.stats2, aes(nonsynon.probability)) + geom_histogram(binwidth=0.005)+ xlim(0,0.65)
+ggplot(dnds.stats2, aes(N)) + geom_histogram(binwidth=1) + xlim(0,150)
+dev.off()
+
+
+new <- lm(dnds.stats2$mean.N~dnds.stats2$nonsynon.probability)
+
+ggplot(dnds.stats2, aes(mean.N,nonsynon.probability)) + geom_point(alpha=0.1,size=0.5) + xlim(0,500) + ylim(0,2.5) + stat_smooth(method = "lm", col = "red",size=0.1)
+ggplot(dnds.stats2, aes(mean.S,synon.probability)) + geom_point(alpha=0.1,size=0.5) + xlim(0,200) + ylim(0,1) + stat_smooth(method = "lm", col = "red",size=0.1)
+dev.off()
+
+ggplot(dnds.stats2, aes(mean.N,mean.S)) + geom_point(alpha=0.1,size=0.5)+ xlim(0,800) + ylim(0,250)
+ggplot(dnds.stats2, aes(nonsynon.probability,synon.probability)) + geom_point(alpha=0.1,size=0.5)+ xlim(0,3) + ylim(0,1)
+dev.off()
+
+dnds.stats2[,"total.mut":=S+N]
+dnds.stats2[,"prob.s.e":=synon.probability/(nonsynon.probability+synon.probability)]
+dnds.stats2[,"prob.s.r":=mean.S/(mean.N+mean.S)]
+dnds.stats2[,"or.e":=(N/S)/(nonsynon.probability/synon.probability)]
+dnds.stats2[,"or.r":=(N/S)/(mean.N/mean.S)]
+
+print("Calculating P-values")
+test <- function(x, p, n){binom.test(x, n, p, alternative="two.sided")$p.value}
+dnds.stats2[,p.value.e:=mapply(test, S, prob.s.e, total.mut)]
+dnds.stats2[,p.value.r:=mapply(test, S, prob.s.r, total.mut)]
+
+cbind(dnds.stats2[order(p.value.r)][or.r<1,.(gene.name,p.value.r,or.r)][1:35],dnds.stats2[order(p.value.e)][or.r<1,.(gene.name,p.value.e,or.e)][1:35])
+
+# p-value dist
+ggplot(dnds.stats2, aes(p.value.r)) +
+	geom_histogram(binwidth=0.005)
+
+# volcano plot 
+ggplot(dnds.stats2, aes(log(or.r,2),abs(log(p.value.r,10)))) +
+	geom_point(alpha=0.3,size=0.5) +
+	scale_y_log10()
+
+# volcano plot
+ggplot(dnds.stats2, aes(log(or.e,2),abs(log(p.value.e,10)))) +
+	geom_point(alpha=0.3,size=0.5) +
+	scale_y_log10()
+dev.off()
+
+
+
+ggplot(dnds.stats2, aes(abs(log(p.value.e,10)),abs(log(p.value.r,10)))) + geom_point(alpha=0.1,size=0.5) + geom_abline(slope = 1,col="red") +
+	scale_y_log10() +
+	scale_x_log10()
+dev.off()
+
+ggplot(dnds.stats2, aes(prob.s.r,prob.s.e)) + geom_point(alpha=0.1,size=0.5) + geom_abline(slope = 1,col="red")
+dev.off()
 
 # calculate dnds - SHOULD CALCULATE BASED ON RANDOM SAMPLE?
 dnds.stats$random.dnds <- dnds.stats[,(mean.N/nonsynon.probability)/(mean.S/synon.probability)]
@@ -56,6 +135,9 @@ dnds.stats$observed.dnds <- dnds.stats[,(N/nonsynon.probability)/(S/synon.probab
 dnds.stats$NS <- dnds.stats[,(nonsynon.probability/synon.probability)]
 
 setkey(dnds.stats,transcript)
+
+
+hist(log(random.dnds2[transcript=="ENST00000336138",dnds]),breaks=300)
 
 
 # annotate randomised data, with NS
