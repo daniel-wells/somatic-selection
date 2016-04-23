@@ -9,7 +9,6 @@ sink(logfile, type="message")
 # install.packages('ggplot2')
 # install.packages("ggrepel")
 # install.packages('data.table')
-# install.packages('metRology')
 
 library(data.table)
 dNdS.by.gene.bysite <- fread("data/dNdS_bysite.tsv", header=TRUE)
@@ -205,10 +204,11 @@ for (site in unique(dNdS.by.gene.bysite$primary_site)){
 dev.off()
 
 
-# COMBINE ???
+# COMBINE
 most.signif <- dNdS.by.gene[dNdS.by.gene[, .I[which.min(p.value)], by=Ensembl.Gene.ID]$V1]
-# but only positive...
+# but only positive...?
 
+# all genes using most significant from individual types
 pdf(width=16, height=9, onefile = TRUE)
 ggplot(most.signif, aes(log2.odds.ratio,abs(log(p.value,10)))) +
 	geom_point(aes(colour = cancer.gene),alpha=0.3,size=0.5) +
@@ -274,7 +274,7 @@ ggplot(dNdS.by.gene, aes(total.mut)) +
 	theme(legend.position="bottom",text = element_text(size=17))
 dev.off()
 
-# for largest primary site
+# Total mutation hist for largest primary site
 ggplot(dNdS.by.gene.bysite[primary_site=="Skin"], aes(total.mut)) + 
 	geom_histogram(binwidth = 1) + 
 	scale_x_continuous(limits = c(-1, 100)) + 
@@ -292,7 +292,7 @@ ggplot(dNdS.by.gene, aes(p.value)) +
 	theme(legend.position="bottom",text = element_text(size=17))
 dev.off()
 
-# for largest primary site
+# P histogrm for largest primary site (Skin)
 ggplot(dNdS.by.gene.bysite[primary_site=="Skin"], aes(p.value)) +
 	geom_histogram(aes(y =..density..),binwidth=0.005) +
 	labs(x="P-value",y="Density") +
@@ -351,9 +351,9 @@ ggplot(dNdS.by.gene, aes(odds.ratio)) +
 	scale_x_log10()
 dev.off()
 
+# Cancer vs normal density dist
 archive.file("results/cancer_distribution.pdf")
 pdf("results/cancer_distribution.pdf", width=15, height=8, onefile = TRUE)
-# Cancer vs normal density dist
 ggplot(dNdS.by.gene[S>3], aes(x=odds.ratio,fill=cancer.gene.vogelstein)) + 
 	geom_density(alpha=0.3) + 
 	geom_vline(xintercept = 1,color = "red") + 
@@ -384,8 +384,6 @@ top <- dNdS.by.gene[order(p.value)][odds.ratio>1][1:100]
 # Save whole table
 archive.file("results/dNdS.tsv")
 write.table(dNdS.by.gene, "results/dNdS.tsv", sep="\t",row.names=FALSE,quote=FALSE)
-
-write.table(dNdS.by.gene[order(p.value)][1:200], "results/for.manu.tsv", sep="\t",row.names=FALSE,quote=FALSE)
 
 # Export top and bottom 100 hits to tsv file
 archive.file("results/top_dNdS.tsv")
