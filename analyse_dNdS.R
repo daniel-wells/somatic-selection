@@ -220,22 +220,14 @@ ggplot(most.signif, aes(log2.odds.ratio,abs(log(p.value,10)))) +
 	geom_label_repel(data = most.signif[p.value<(0.0015) & log(odds.ratio)>0.6], aes(label = Associated.Gene.Name), size = 2, box.padding = unit(0.5, "lines"), point.padding = unit(0.1, "lines"), force=1,segment.size=0.2,segment.color="blue")
 dev.off()
 
-signif.bysite <- most.signif[p.value<(0.0015) & log(odds.ratio)>0.6,.(Associated.Gene.Name,p.value,cancer.gene)]
-
-dNdS.by.gene.c <- dNdS.by.gene
-dNdS.by.gene <- signif.pancancer
+# join individual and pancancer
 signif.pancancer <- dNdS.by.gene
-
-signif.pancancer2 <- signif.pancancer[p.value<(0.0015) & log(odds.ratio)>0.6,.(Associated.Gene.Name,p.value,cancer.gene)]
-
 setkey(signif.pancancer,Associated.Gene.Name)
 setkey(most.signif,Associated.Gene.Name)
-
 merge.signif <- merge(signif.pancancer,most.signif,all=TRUE)
+stopifnot(nrow(merge.signif[cancer.gene.x!=cancer.gene.y])==0)
 
-merge.signif[cancer.gene.x!=cancer.gene.y]
-# 0
-
+# pancancer significance vs subtype significance
 pdf(width=16, height=9, onefile = TRUE)
 ggplot(merge.signif,aes(abs(log(p.value.y,10)),abs(log(p.value.x,10)))) + 	geom_point(aes(colour = cancer.gene.y)) + 
 	scale_y_log10() + scale_x_log10() +
