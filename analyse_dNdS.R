@@ -26,6 +26,10 @@ setkey(dNdS.by.gene,Ensembl.Gene.ID)
 
 # add ranking and order
 dNdS.by.gene[,ranking:=rank(odds.ratio,ties.method="first")]
+
+dNdS.by.gene[,or.rank:=rank(odds.ratio,ties.method="first")]
+dNdS.by.gene[,p.rank:=rank(p.value,ties.method="first")]
+
 dNdS.by.gene <- dNdS.by.gene[order(-ranking)]
 print(paste(nrow(dNdS.by.gene),"genes"))
 
