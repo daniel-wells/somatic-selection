@@ -109,17 +109,29 @@ print(paste(length(dNdS.by.gene[!(dNdS.by.gene$gene.name %in% RNAseq$gene.name),
 # For all rows in dNdS.by.gene, add expression from RNAseq if avaliable
 dNdS.by.gene <- RNAseq[dNdS.by.gene,]
 
+# Summary Statistics
+# how many 
+print(paste(nrow(dNdS.by.gene),"entries (genes)"))
+print(paste(nrow(dNdS.by.gene[total.mut>37]),"genes have 80% power (>37 mutations)"))
+#11,407 / 17,929
 
 # to detect bias calculate dN, dS, and ranking given a cutoff
 dNdS.by.gene$dS <- dNdS.by.gene$S / dNdS.by.gene$synon.probability
 dNdS.by.gene$dN <- dNdS.by.gene$N / dNdS.by.gene$nonsynon.probability
+# mean effect size
+print(paste(dNdS.by.gene[q.value<0.1 & odds.ratio>1,.(mean(log2.odds.ratio))],"mean log2 odds ratio"))
 
 # Re-rank after subsetting S
 dNdS.by.gene[S>3,ranking.1:=rank(odds.ratio,ties.method="first")]
 dNdS.by.gene[S>10,ranking.2:=rank(odds.ratio,ties.method="first")]
 dNdS.by.gene[S>15,ranking.3:=rank(odds.ratio,ties.method="first")]
 dNdS.by.gene[S>3 & N>3,ranking.4:=rank(odds.ratio,ties.method="first")]
+# how many sig genes
+print(paste(nrow(dNdS.by.gene[q.value<0.1 & odds.ratio>1]),"genes with q<0.1 positive selection"))
+print(paste(nrow(dNdS.by.gene[q.value<0.1 & odds.ratio<1]),"genes with q<0.1 negative selection"))
 
+# how many known cancer genes
+print(paste(sum(dNdS.by.gene[q.value<0.1 & odds.ratio>1,cancer.gene.vogelstein]),"vogelstein cancer genes with q<0.1"))
 
 #########################
 ###### Plot Graphs ######
