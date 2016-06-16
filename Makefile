@@ -15,7 +15,14 @@ print-%  : ; @echo $* = $($*)
 
 data/raw/ICGC_projects.tsv:
 	# Manual Download list of projects -O data/raw/ICGC_projects.tsv
-	echo https://dcc.icgc.org/projects/details https://dcc.icgc.org/78e07ae9-2c8c-4511-a2b0-77c71475688d
+	echo https://dcc.icgc.org/projects/details
+	mkdir data
+	mkdir data/raw
+	mkdir logs
+	mkdir code
+	mkdir archive
+	mkdir results
+	mkdir data/raw/ICGC/
 
 data/url-list.txt: data/raw/ICGC_projects.tsv
 	for OUTPUT in $$(cut -f 1,7 data/raw/ICGC_projects.tsv | grep -Pv '(\t0|Project)' | cut -f 1) ; do \
