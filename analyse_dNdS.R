@@ -378,12 +378,12 @@ dev.off()
 
 # Bottom 100 Hits (by p-value)
 bottom <- dNdS.by.gene[order(p.value)][odds.ratio<1][1:100]
-,.(Associated.Gene.Name,S,N,odds.ratio,log2.odds.ratio,p.value,q.value,cancer.gene,Ensembl.Transcript.ID,expression.percent.rank,cancer.gene.vogelstein)][1:100]
+#,.(Associated.Gene.Name,S,N,odds.ratio,log2.odds.ratio,p.value,q.value,cancer.gene,Ensembl.Transcript.ID,expression.percent.rank,cancer.gene.vogelstein)][1:100]
 
 
 # Top 100 Hits (by p-value)
 top <- dNdS.by.gene[order(p.value)][odds.ratio>1][1:100]
-,.(Associated.Gene.Name,S,N,odds.ratio,log2.odds.ratio,p.value,q.value,cancer.gene,Ensembl.Transcript.ID,expression.percent.rank,cancer.gene.vogelstein)][1:100]
+#,.(Associated.Gene.Name,S,N,odds.ratio,log2.odds.ratio,p.value,q.value,cancer.gene,Ensembl.Transcript.ID,expression.percent.rank,cancer.gene.vogelstein)][1:100]
 
 # Save whole table
 archive.file("results/dNdS.tsv")
