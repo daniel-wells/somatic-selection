@@ -46,9 +46,12 @@ return(transcript.table)
 
 # Should really just loop through unique here??
 stringset <- fasta
+print("Starting loading transcripts")
+print(Sys.time())
 test <- lapply(names(stringset),load.transcripts)
-# 11.5sec for 1000, *83 16 min without removing unused
-# 480.202 - 8 mins (for 23k)
+print("Finished loading transcripts")
+print(Sys.time())
+# 20sec for 1000, *100 -> 34 min
 
 codome <- rbindlist(test)
 

@@ -21,7 +21,6 @@ print(paste(nrow(observed_variants),"unique observed variants loaded"))
 
 
 ################ Load mappability file ################
-# /mnt/lustre/users/bschuster/TCGA/Coverage/mappability_24_100bp_windows_exons.bed.gz
 mappability <- fread("zcat < data/raw/mappability_100bp_windows_exons.bed.gz")
 setnames(mappability,c("chromosome","start","mappability"))
 # convert from 0 based to 1 based

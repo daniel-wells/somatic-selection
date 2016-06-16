@@ -2,8 +2,12 @@
 results: results/figures.pdf results/dNdS_by_gene.tsv
 all: raw_data results
 
+
 # To print a variable type e.g. "make -n print-TGCA_RNAseq_data"
 print-%  : ; @echo $* = $($*)
+
+
+
 
 #################################
 ####### Download Raw Data #######
