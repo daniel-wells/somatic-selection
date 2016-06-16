@@ -74,7 +74,8 @@ $(TGCA_RNAseq_data):
 	# Requires manual download
 
 data/raw/HGNC.tsv:
-	# Requires manual download
+	curl --data 'col=gd_hgnc_id&col=gd_app_sym&col=gd_locus_group&col=gd_pub_eg_id&col=gd_pub_ensembl_id&col=md_eg_id&col=md_ensembl_id&status=Approved&status_opt=2&where=&order_by=gd_app_sym_sort&format=text&limit=&submit=submit' http://www.genenames.org/cgi-bin/download -o data/raw/HGNC.tsv
+
 
 data/raw/mappability_100bp_windows_exons.bed.gz:
 	# Requires manual download
