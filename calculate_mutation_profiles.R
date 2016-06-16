@@ -45,6 +45,12 @@ vr = VRanges(
 # add "chr" to work with UCSC.hg19
 vr <- ucsc(vr)
 
+# remove non SNV variants (alt coded as 1 at time of writing in NBL)
+idx_snv = ref(vr) %in% DNA_BASES & alt(vr) %in% DNA_BASES
+vr[!idx_snv]
+
+vr <- vr[idx_snv]
+
 ## Annotate variants with context
 vr_context <- mutationContext(vr, genome)
 
