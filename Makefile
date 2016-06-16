@@ -64,8 +64,8 @@ data/raw/cancer_gene_census.csv:
 	# Download cancer gene census for annotation in analysis
 	# Requires Password
 	sftp "daniel.wells@well.ox.ac.uk"@sftp-cancer.sanger.ac.uk
-	get /files/grch38/cosmic/v75/cancer_gene_census.csv data/raw/cancer_gene_census.csv
-	#572 genes
+	get /files/grch38/cosmic/v77/cancer_gene_census.csv data/raw/cancer_gene_census.csv
+	#595 genes
 
 data/raw/vogelstein_driver_genes.tdv:
 	# Requires manual download
