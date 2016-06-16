@@ -42,6 +42,15 @@ data/raw/mart_export.txt.gz:
 	# Requires manual download
 	http://www.ensembl.org/biomart/martview/a9103936cd932b57917528550c7c9a2b?VIRTUALSCHEMANAME=default&ATTRIBUTES=hsapiens_gene_ensembl.default.feature_page.external_gene_name|hsapiens_gene_ensembl.default.feature_page.gene_biotype|hsapiens_gene_ensembl.default.feature_page.transcript_biotype|hsapiens_gene_ensembl.default.feature_page.ensembl_gene_id|hsapiens_gene_ensembl.default.feature_page.ensembl_transcript_id&FILTERS=&VISIBLEPANEL=resultspanel
 	sha256sum data/raw/mart_export.txt.gz >> data/raw/SHA256SUMS
+data/raw/data/raw/ExAC.r0.3.1.sites.vep.vcf.gz:
+	# Download ExAC for SNP frequencies ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3.1/
+	# see also /mnt/lustre/data/ExAC/
+	curl ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3.1/ExAC.r0.3.1.sites.vep.vcf.gz -o data/raw/ExAC.r0.3.1.sites.vep.vcf.gz
+	curl ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3.1/ExAC.r0.3.1.sites.vep.vcf.gz.tbi -o data/raw/ExAC.r0.3.1.sites.vep.vcf.gz.tbi
+	curl ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3.1/md5sum.txt -o data/raw/ExAC.md5sum.txt
+	sum data/raw/ExAC.r0.3.1.sites.vep.vcf.gz
+	head -1 data/raw/ExAC.md5sum.txt
+	sha256sum data/raw/ExAC.r0.3.1.sites.vep.vcf.gz >> data/raw/SHA256SUMS
 
 data/raw/cancer_gene_census.csv:
 	# Download cancer gene census for annotation in analysis
@@ -70,6 +79,13 @@ raw_data: data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz data/raw/mart_export.txt
 #############################
 
 #######
+####### ExAC
+#######
+data/raw/ExAC.bed: data/raw/ExAC.r0.3.1.sites.vep.vcf.gz data/raw/ExAC.r0.3.1.sites.vep.vcf.gz.tbi
+	module load apps/bcftools/1.0/gcc-4.4.7
+	bcftools query -f "%CHROM\t%POS\t%ID\t%QUAL\t%REF\t%ALT\t%AF\n" /mnt/lustre/data/ExAC/ExAC.r0.3.1.sites.vep.vcf.gz | perl -ne '@l=split; if (/,/){@a=split /,/, $l[5]; @af=split /,/, $l[6]; for (0..$#a){print join("\t", $l[0], $l[1]-1, $l[1], @l[2..4], $a[$_], $af[$_])."\n"}}else{print join("\t", $l[0], $l[1]-1, $l[1], @l[2..6])."\n"}' > data/ExAC.bed
+
+#######
 ####### RNAseq
 #######
 
@@ -94,7 +110,7 @@ data/final.transcript.list.rds: code/filter_transcripts.R data/observed.transcri
 	Rscript filter_transcripts.R
 
 # Filter variants
-data/coding.mutations.filtered%rds data/single.base.coding.substitutions%rds: code/filter_variants.R data/coding.mutations.rds data/raw/mappability_100bp_windows_exons.bed.gz data/final.transcript.list.rds
+data/coding.mutations.filtered%rds data/single.base.coding.substitutions%rds: code/filter_variants.R data/coding.mutations.rds data/ExAC.bed data/raw/mappability_100bp_windows_exons.bed.gz data/final.transcript.list.rds
 	Rscript code/filter_variants.R
 
 # Count trimers

@@ -89,11 +89,8 @@ final.variants <- final.variants[mappability>0.79]
 print(paste(nrow(final.variants),"variants left after removing those with mappability <0.8"))
 
 
-# module load apps/bcftools/1.0/gcc-4.4.7
-# bcftools query -f "%CHROM\t%POS\t%ID\t%QUAL\t%REF\t%ALT\t%AF\n" /mnt/lustre/data/ExAC/ExAC.r0.3.1.sites.vep.vcf.gz | perl -ne '@l=split; if (/,/){@a=split /,/, $l[5]; @af=split /,/, $l[6]; for (0..$#a){print join("\t", $l[0], $l[1]-1, $l[1], @l[2..4], $a[$_], $af[$_])."\n"}}else{print join("\t", $l[0], $l[1]-1, $l[1], @l[2..6])."\n"}' > data/raw/ExAC.bed
-
 ################ Filter out common variants
-exac <- fread('data/raw/ExAC.bed')
+exac <- fread('data/ExAC.bed')
 setnames(exac,c("chromosome","chromosome.minus.1","chromosome_start","rsID","quality","ref","mutated_to_allele","freq"))
 setkey(exac,chromosome,chromosome_start,mutated_to_allele)
 
