@@ -1,5 +1,5 @@
 # Start writing to an output file
-logfile <- file(paste("logs/calculate_dNdS.R.log",format(Sys.time(), "%Y-%m-%d.%H-%M-%S"), "txt", sep = "."))
+logfile <- file(paste("logs/load_mutations.R.log",format(Sys.time(), "%Y-%m-%d.%H-%M-%S"), "txt", sep = "."))
 sink(logfile)
 sink(logfile, type="message")
 
