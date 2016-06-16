@@ -83,7 +83,7 @@ data/raw/mappability_100bp_windows_exons.bed.gz:
 
 ssm: $(ICGC_project_mutation_files)
 
-raw_data: data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz $(ICGC_project_mutation_files) data/raw/cancer_gene_census.csv data/raw/vogelstein_driver_genes.tdv data/raw/ICGC_projects.tsv data/raw/exons.hg19.mappability100.bed.gz data/raw/HGNC.tsv data/raw/data/raw/ExAC.r0.3.1.sites.vep.vcf.gz $(TGCA_RNAseq_data)
+raw_data: data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz $(ICGC_project_mutation_files) data/raw/cancer_gene_census.csv data/raw/vogelstein_driver_genes.tdv data/raw/ICGC_projects.tsv data/raw/mappability_100bp_windows_exons.bed.gz data/raw/HGNC.tsv data/raw/data/raw/ExAC.r0.3.1.sites.vep.vcf.gz $(TGCA_RNAseq_data)
 
 
 #############################
