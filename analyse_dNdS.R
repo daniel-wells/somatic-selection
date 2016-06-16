@@ -44,12 +44,14 @@ setnames(cancer.genes, make.names(names(cancer.genes)))
 # Correct an filter COSMIC genes via HGNC
 hgnc <- fread("data/raw/HGNC.tsv", header=TRUE)
 setnames(hgnc,make.names(names(hgnc)))
+setnames(hgnc,c("Entrez.Gene.ID","Entrez.Gene.ID.supplied.by.NCBI."),c("Entrez.Gene.ID.manual","Entrez.Gene.ID"))
+setnames(hgnc,c("Ensembl.Gene.ID","Ensembl.ID.supplied.by.Ensembl."),c("Ensembl.Gene.ID.manual","Ensembl.Gene.ID"))
 setkey(hgnc,Entrez.Gene.ID)
 setkey(cancer.genes,Entrez.GeneId)
 cancer.genes <- hgnc[cancer.genes]
 
-print("Genes in Cancer Census with no Ensembl.ID")
-hgnc[cancer.genes][is.na(Approved.Symbol),.(Approved.Symbol,Gene.Symbol,Locus.Group,Entrez.Gene.ID,Ensembl.ID)]
+print("Genes in Cancer Census with no Approved.Symbol")
+cancer.genes[is.na(Approved.Symbol),.(Approved.Symbol,Gene.Symbol,Locus.Group,Entrez.Gene.ID,Ensembl.Gene.ID)]
 
 # Remove non protein coding genes from cancer list
 cancer.genes <- cancer.genes[Locus.Group=="protein-coding gene"]
@@ -57,13 +59,13 @@ cancer.genes <- cancer.genes[Locus.Group=="protein-coding gene"]
 # Remove non somaticly mutated genes from cancer list
 cancer.genes <- cancer.genes[Somatic=="yes"]
 
-dNdS.by.gene$cancer.gene <- dNdS.by.gene$Ensembl.Gene.ID %in% cancer.genes$Ensembl.ID
+dNdS.by.gene$cancer.gene <- dNdS.by.gene$Ensembl.Gene.ID %in% cancer.genes$Ensembl.Gene.ID
 # NB some duplicates, 518 unique
 
 print(paste(nrow(dNdS.by.gene[cancer.gene==TRUE]),"cancer genes with dNdS value"))
 
 print("Cancer genes not in dNdS.by.gene database (S or N = 0, or mappability bad)")
-cancer.genes[!(cancer.genes$Ensembl.ID %in% dNdS.by.gene$Ensembl.Gene.ID),.(Gene.Symbol,Entrez.Gene.ID,Ensembl.ID)]
+cancer.genes[!(cancer.genes$Ensembl.Gene.ID %in% dNdS.by.gene$Ensembl.Gene.ID),.(Gene.Symbol,Entrez.Gene.ID,Ensembl.Gene.ID)]
 
 ##### annotate vogelstein cancer genes ######
 cancer.genes.vogelstein <- fread("data/raw/vogelstein_driver_genes.tdv", header=TRUE)
