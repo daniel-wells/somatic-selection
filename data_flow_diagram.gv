@@ -50,7 +50,7 @@ digraph dfd2{
        subgraph cluster_level1{
                 	label ="Annotations" rank="max";
 				mappability [label="mappability_100bp_windows_exons.bed.gz" shape=box, style=filled, fillcolor=yellow];
-        		biomart [label="Biomart Export" shape=box, style=filled, fillcolor=yellow];
+        		ExAC [label="ExAC" shape=box, style=filled, fillcolor=yellow];
 	        	vogelstein [label="Vogelstein Cancer List" shape=box, style=filled, fillcolor=yellow];
 	        	cosmic [label="COSMIC Cancer List" shape=box, style=filled, fillcolor=yellow];
 	        	hgnc [label="HGNC gene names" shape=box, style=filled, fillcolor=yellow];
@@ -77,7 +77,7 @@ digraph dfd2{
         }
 
 	# Download Data
-	MakeDownload -> {fasta, ICGCindiv, biomart, vogelstein, rna, mappability, cosmic, hgnc}
+	MakeDownload -> {fasta, ICGCindiv, ExAC, vogelstein, rna, mappability, cosmic, hgnc}
 	
 	# Load mutations
 	ICGCindiv -> load -> {observed,aggMut,observedTranscripts}
@@ -94,10 +94,10 @@ digraph dfd2{
 	{fasta,transcriptList} -> trimerise -> {codome,trimerCounts}
 	
 	# Filter transcripts
-	{fasta,observedTranscripts,biomart} -> filterTranscripts -> transcriptList
+	{fasta,observedTranscripts} -> filterTranscripts -> transcriptList
 	
 	# Filter variants
-	{mappability,transcriptList,observed} -> filterVariants -> {singleBaseCodingSubs,filteredObserved}
+	{mappability,transcriptList,observed,ExAC} -> filterVariants -> {singleBaseCodingSubs,filteredObserved}
 	
 	# Create random genomes and calculate Pvalues
 	{codome,motifProbs} -> randomise -> randomisedRaw -> mergeRandom -> randomAggregated -> calculateP -> pvalues -> analysednds
