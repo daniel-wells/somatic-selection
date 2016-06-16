@@ -38,10 +38,6 @@ data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz:
 	sha256sum data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz >> data/raw/SHA256SUMS
 
 
-data/raw/mart_export.txt.gz:
-	# Requires manual download
-	http://www.ensembl.org/biomart/martview/a9103936cd932b57917528550c7c9a2b?VIRTUALSCHEMANAME=default&ATTRIBUTES=hsapiens_gene_ensembl.default.feature_page.external_gene_name|hsapiens_gene_ensembl.default.feature_page.gene_biotype|hsapiens_gene_ensembl.default.feature_page.transcript_biotype|hsapiens_gene_ensembl.default.feature_page.ensembl_gene_id|hsapiens_gene_ensembl.default.feature_page.ensembl_transcript_id&FILTERS=&VISIBLEPANEL=resultspanel
-	sha256sum data/raw/mart_export.txt.gz >> data/raw/SHA256SUMS
 data/raw/data/raw/ExAC.r0.3.1.sites.vep.vcf.gz:
 	# Download ExAC for SNP frequencies ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3.1/
 	# see also /mnt/lustre/data/ExAC/
@@ -71,7 +67,7 @@ data/raw/HGNC.tsv:
 data/raw/exons.hg19.mappability100.bed.gz:
 	# Requires manual download
 
-raw_data: data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz data/raw/mart_export.txt.gz $(ICGC_project_mutation_files) data/raw/cancer_gene_census.csv data/raw/vogelstein_driver_genes.tdv data/raw/ICGC_projects.tsv data/raw/exons.hg19.mappability100.bed.gz data/raw/HGNC.tsv $(TGCA_RNAseq_data)
+raw_data: data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz $(ICGC_project_mutation_files) data/raw/cancer_gene_census.csv data/raw/vogelstein_driver_genes.tdv data/raw/ICGC_projects.tsv data/raw/exons.hg19.mappability100.bed.gz data/raw/HGNC.tsv data/raw/data/raw/ExAC.r0.3.1.sites.vep.vcf.gz $(TGCA_RNAseq_data)
 
 
 #############################
@@ -106,7 +102,7 @@ data/coding.mutations%rds data/observed.transcripts%rds: code/load_mutations.R
 	Rscript code/load_mutations.R
 
 # Choose which transcripts to use
-data/final.transcript.list.rds: code/filter_transcripts.R data/observed.transcripts.rds data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz data/raw/mart_export.txt.gz
+data/final.transcript.list.rds: code/filter_transcripts.R data/observed.transcripts.rds data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz
 	Rscript filter_transcripts.R
 
 # Filter variants

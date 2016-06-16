@@ -13,8 +13,14 @@ observed.transcripts <- readRDS("data/observed.transcripts.rds")
 print(paste(nrow(observed.transcripts),"observed unique transcripts"))
 
 # Assign gene to transcripts
-updated.annotations <- fread(input = 'zcat < data/raw/mart_export.txt.gz')
-setnames(updated.annotations, make.names(names(updated.annotations)))
+library(biomaRt)
+ensembl <- useMart("ENSEMBL_MART_ENSEMBL", host="www.ensembl.org", dataset="hsapiens_gene_ensembl")
+updated.annotations <- getBM(attributes = c("ensembl_gene_id","ensembl_transcript_id",'gene_biotype','transcript_biotype','hgnc_symbol','external_gene_name'), mart = ensembl, uniqueRows=TRUE)
+updated.annotations <- data.table(updated.annotations)
+#ensembl.map[,.N,by=transcript_biotype][order(-N)]
+#ensembl.map[transcript_biotype=="protein_coding"][hgnc_symbol!=external_gene_name][sample(.N,99)]
+setnames(updated.annotations, make.names(c("Ensembl Gene ID","Ensembl Transcript ID","Gene type","Transcript type","HGNC Symbol","Associated Gene Name")))
+
 setkey(updated.annotations,Ensembl.Transcript.ID)
 
 # setkey(observed_variants,transcript.id)
