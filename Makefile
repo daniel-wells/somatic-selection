@@ -1,5 +1,5 @@
 .PHONY : results all
-results: results/figures.pdf results/dNdS_by_gene.tsv
+results: results/volcano.pdf results/dNdS_by_gene.tsv
 all: raw_data results
 
 
@@ -153,6 +153,7 @@ data/dNdS_byproject%tsv data/dNdS_bysite%tsv data/dNdS_pancancer%tsv: code/calcu
 
 # Plot results
 # % are to ensure rule is not run twice for both targets when running make in parallel
-results/figures%pdf results/dNdS_by_gene%tsv: code/analyse_dNdS.R data/raw/cancer_gene_census.csv data/RNAseq.by.gene.tsv data/dNdS_byproject.tsv data/dNdS_bysite.tsv data/dNdS_pancancer.tsv data/raw/vogelstein_driver_genes.tdv data/raw/HGNC.tsv
+results/volcano%pdf results/dNdS_by_gene%tsv: code/analyse_dNdS.R data/raw/cancer_gene_census.csv data/dNdS_byproject.tsv data/dNdS_bysite.tsv data/dNdS_pancancer.tsv data/raw/vogelstein_driver_genes.tdv data/raw/HGNC.tsv
+	# possibly add data/RNAseq.by.gene.tsv
 	# Generate histogram and distribution of dNdS
 	Rscript code/analyse_dNdS.R
