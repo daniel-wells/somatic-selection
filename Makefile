@@ -33,6 +33,7 @@ URLS=$(shell awk '{printf "%s\n", $$1}' data/url-list.txt)
 
 ICGC_project_mutation_files=$(addprefix data/raw/ICGC/,$(notdir $(URLS)))
 
+# Download simple somatic mutation files
 $(ICGC_project_mutation_files): data/url-list.txt
 	mkdir -p $(dir $@)
 	curl "$(filter $(addprefix %/,$(notdir $@)),$(URLS))" -o $@
@@ -75,8 +76,11 @@ $(TGCA_RNAseq_data):
 data/raw/HGNC.tsv:
 	# Requires manual download
 
-data/raw/exons.hg19.mappability100.bed.gz:
+data/raw/mappability_100bp_windows_exons.bed.gz:
 	# Requires manual download
+	cp /mnt/lustre/users/bschuster/TCGA/Coverage/mappability_100bp_windows_exons.bed.gz /mnt/lustre/users/dwells/v21/data/raw/mappability_100bp_windows_exons.bed.gz
+
+ssm: $(ICGC_project_mutation_files)
 
 raw_data: data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz $(ICGC_project_mutation_files) data/raw/cancer_gene_census.csv data/raw/vogelstein_driver_genes.tdv data/raw/ICGC_projects.tsv data/raw/exons.hg19.mappability100.bed.gz data/raw/HGNC.tsv data/raw/data/raw/ExAC.r0.3.1.sites.vep.vcf.gz $(TGCA_RNAseq_data)
 
