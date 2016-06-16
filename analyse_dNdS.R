@@ -126,7 +126,7 @@ library(ggplot2)
 library(ggrepel)
 
 #p-value correction plot
-archive.file("data/p_correction.pdf")
+archive.file("results/p_correction.pdf")
 pdf("results/p_correction.pdf",width=16, height=9, onefile = TRUE)
 ggplot(dNdS.by.gene, aes(p.value,q.value)) + 
 	geom_point(size=0.5) +
@@ -136,6 +136,7 @@ ggplot(dNdS.by.gene, aes(p.value,q.value)) +
 dev.off()
 
 # Funnel plot
+archive.file("results/funnel.pdf")
 pdf("results/funnel.pdf", width=16, height=9, onefile = TRUE)
 ggplot(dNdS.by.gene, aes(total.mut,odds.ratio)) + 
 	geom_point(aes(colour = is.significant),alpha=0.5,size=0.5) + 
@@ -148,6 +149,8 @@ ggplot(dNdS.by.gene, aes(total.mut,odds.ratio)) +
 dev.off()
 
 # Annotated q value Volcano Plot
+archive.file("results/volcano.q.pdf")
+pdf("results/volcano.q.pdf", width=16, height=9, onefile = TRUE)
 ggplot(dNdS.by.gene, aes(log2.odds.ratio,abs(log(q.value,10)))) + 
 	geom_point(aes(colour = cancer.gene),alpha=0.3) + 
 	scale_colour_manual(name="In COSMIC cancer gene census?",
@@ -169,6 +172,7 @@ ggplot(dNdS.by.gene, aes(log2.odds.ratio,abs(log(q.value,10)))) +
 dev.off()
 
 # Annotated P value Volcano Plot
+archive.file("results/volcano.pdf")
 pdf("results/volcano.pdf", width=16, height=9, onefile = TRUE)
 ggplot(dNdS.by.gene, aes(log2.odds.ratio,abs(log(p.value,10)))) + 
 	geom_point(aes(colour = cancer.gene),alpha=0.3,size=0.5) + 
@@ -191,6 +195,7 @@ dev.off()
 
 
 # Annotated P value Volcano Plot by primary site
+archive.file("results/volcano_bysite.pdf")
 pdf("results/volcano_bysite.pdf", width=16, height=9, onefile = TRUE)
 plot.volcano <- function(data){
 ggplot(data, aes(log2.odds.ratio,abs(log(p.value,10)))) + 
@@ -213,7 +218,8 @@ most.signif <- dNdS.by.gene[dNdS.by.gene[, .I[which.min(p.value)], by=Ensembl.Ge
 # but only positive...?
 
 # all genes using most significant from individual types
-pdf(width=16, height=9, onefile = TRUE)
+archive.file("results/combination.pdf")
+pdf("results/combination.pdf",width=16, height=9, onefile = TRUE)
 ggplot(most.signif, aes(log2.odds.ratio,abs(log(p.value,10)))) +
 	geom_point(aes(colour = cancer.gene),alpha=0.3,size=0.5) +
 	scale_colour_manual(name="In COSMIC cancer gene census?",  values =c("black", "red")) +
@@ -232,7 +238,8 @@ merge.signif <- merge(signif.pancancer,most.signif,all=TRUE)
 stopifnot(nrow(merge.signif[cancer.gene.x!=cancer.gene.y])==0)
 
 # pancancer significance vs subtype significance
-pdf(width=16, height=9, onefile = TRUE)
+archive.file("results/combination2.pdf")
+pdf("results/combination2.pdf",width=16, height=9, onefile = TRUE)
 ggplot(merge.signif,aes(abs(log(p.value.y,10)),abs(log(p.value.x,10)))) + 	geom_point(aes(colour = cancer.gene.y)) + 
 	scale_y_log10() + scale_x_log10() +
 	scale_colour_manual(name="In COSMIC cancer gene census?",  values =c("black", "red")) +
@@ -279,6 +286,8 @@ ggplot(dNdS.by.gene, aes(total.mut)) +
 dev.off()
 
 # Total mutation hist for largest primary site
+archive.file("results/mutation_distribution.skin.pdf")
+pdf("results/mutation_distribution.skin.pdf", width=15, height=8, onefile = TRUE)
 ggplot(dNdS.by.gene.bysite[primary_site=="Skin"], aes(total.mut)) + 
 	geom_histogram(binwidth = 1) + 
 	scale_x_continuous(limits = c(-1, 100)) + 
@@ -297,6 +306,8 @@ ggplot(dNdS.by.gene, aes(p.value)) +
 dev.off()
 
 # P histogrm for largest primary site (Skin)
+archive.file("results/pvalue_distribution.skin.pdf")
+pdf("results/pvalue_distribution.skin.pdf", width=15, height=8, onefile = TRUE)
 ggplot(dNdS.by.gene.bysite[primary_site=="Skin"], aes(p.value)) +
 	geom_histogram(aes(y =..density..),binwidth=0.005) +
 	labs(x="P-value",y="Density") +
