@@ -13,12 +13,13 @@ print("Reading in reference genome")
 fasta <- readDNAStringSet("data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz")
 
 unique <- readRDS("data/final.transcript.list.rds")
+setkey(unique,Ensembl.Transcript.ID)
 
 # extract each trimer in codome with transcript id and original codon
 load.transcripts <- function(x){
 metadata <- substr(x,0,15) # transcriptID
 # as.list(strsplit(x, "[: ]")[[1]])
-if (metadata %in% unique){ # check if will be used in final analysis or not
+if (metadata %in% unique$Ensembl.Transcript.ID){ # check if will be used in final analysis or not
 transcript <- stringset[[x]]
 length <- length(transcript)
 views <- Views(transcript,seq(1,length-2,1),width=3)
