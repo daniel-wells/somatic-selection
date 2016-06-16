@@ -90,6 +90,7 @@ dNdS.by.gene$classification <- cancer.genes.vogelstein[dNdS.by.gene,classificati
 
 
 ##### add expression data ######
+if(file.exists("data/RNAseq.by.gene.tsv")){
 RNAseq <- fread("data/RNAseq.by.gene.tsv", header=TRUE)
 setnames(RNAseq,c("Associated.Gene.Name","mean.expression","mean.of.stdev.of.expression","expression.ranking","expression.percent.rank","log10.expression"))
 setkey(RNAseq,Associated.Gene.Name)
@@ -99,6 +100,7 @@ print(paste(length(dNdS.by.gene[!(dNdS.by.gene$Associated.Gene.Name %in% RNAseq$
 
 # For all rows in dNdS.by.gene, add expression from RNAseq if avaliable
 dNdS.by.gene <- RNAseq[dNdS.by.gene,]
+}
 
 # Summary Statistics
 # how many 

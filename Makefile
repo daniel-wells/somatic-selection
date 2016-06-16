@@ -101,13 +101,13 @@ data/raw/ExAC.bed: data/raw/ExAC.r0.3.1.sites.vep.vcf.gz data/raw/ExAC.r0.3.1.si
 ####### RNAseq
 #######
 
-TGCA_RNAseq_data=$(wildcard /users/bschuster/sharedscratch/Splicing/GeneExpRaw/*_hiseq_rnaseqv2_gene_exp-raw.tdv.gz)
-
-data/tgca_RNAseq.total.tsv: code/tgca_expression.R $(TGCA_RNAseq_data)
-	Rscript code/tgca_expression.R
-
-data/RNAseq.by.gene.tsv: code/expression_analysis.R data/tgca_RNAseq.total.tsv
-	Rscript code/expression_analysis.R
+# TGCA_RNAseq_data=$(wildcard /users/bschuster/sharedscratch/Splicing/GeneExpRaw/*_hiseq_rnaseqv2_gene_exp-raw.tdv.gz)
+#
+# data/tgca_RNAseq.total.tsv: code/tgca_expression.R $(TGCA_RNAseq_data)
+# 	Rscript code/tgca_expression.R
+#
+# data/RNAseq.by.gene.tsv: code/expression_analysis.R data/tgca_RNAseq.total.tsv
+# 	Rscript code/expression_analysis.R
 
 #######
 ####### Calculate Expected N:S
