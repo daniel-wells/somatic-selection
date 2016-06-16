@@ -24,9 +24,10 @@ data/raw/ICGC_projects.tsv:
 	mkdir results
 	mkdir data/raw/ICGC/
 
+### Set release number here!
 data/url-list.txt: data/raw/ICGC_projects.tsv
 	for OUTPUT in $$(cut -f 1,7 data/raw/ICGC_projects.tsv | grep -Pv '(\t0|Project)' | cut -f 1) ; do \
-		echo "https://dcc.icgc.org/api/v1/download?fn=/release_20/Projects/$$OUTPUT/simple_somatic_mutation.open.$$OUTPUT.tsv.gz" >> data/url-list.txt \ ; \
+		echo "https://dcc.icgc.org/api/v1/download?fn=/release_21/Projects/$$OUTPUT/simple_somatic_mutation.open.$$OUTPUT.tsv.gz" >> data/url-list.txt \ ; \
 	done
 
 URLS=$(shell awk '{printf "%s\n", $$1}' data/url-list.txt)
