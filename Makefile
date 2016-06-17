@@ -8,6 +8,8 @@ print-%  : ; @echo $* = $($*)
 
 
 
+# create all required directories
+$(shell mkdir -p data data/raw data/raw/ICGC/ logs code archive results)
 
 #################################
 ####### Download Raw Data #######
@@ -16,13 +18,6 @@ print-%  : ; @echo $* = $($*)
 data/raw/ICGC_projects.tsv:
 	# Manual Download list of projects -O data/raw/ICGC_projects.tsv
 	echo https://dcc.icgc.org/projects/details
-	mkdir data
-	mkdir data/raw
-	mkdir logs
-	mkdir code
-	mkdir archive
-	mkdir results
-	mkdir data/raw/ICGC/
 
 ### Set release number here!
 data/url-list.txt: data/raw/ICGC_projects.tsv
