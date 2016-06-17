@@ -15,9 +15,17 @@ $(shell mkdir -p data data/raw data/raw/ICGC/ logs code archive results)
 ####### Download Raw Data #######
 #################################
 
-data/raw/ICGC_projects.tsv:
-	# Manual Download list of projects -O data/raw/ICGC_projects.tsv
-	echo https://dcc.icgc.org/projects/details
+data/raw/ICGC_projects%tsv data/raw/vogelstein_driver_genes%tdv: download_annotations.R
+	# Download list of projects and vogelstein driver gene list
+	Rscript download_annotations.R
+
+data/raw/cancer_gene_census.csv:
+	# Download cancer gene census for annotation in analysis
+	# Requires Password
+	#sftp "daniel.wells@well.ox.ac.uk"@sftp-cancer.sanger.ac.uk
+	# get /files/grch38/cosmic/v77/cancer_gene_census.csv data/raw/cancer_gene_census.csv
+	#595 genes
+	cp cancer_gene_census.csv data/raw/cancer_gene_census.csv
 
 ### Set release number here!
 data/url-list.txt: data/raw/ICGC_projects.tsv
@@ -55,16 +63,6 @@ data/raw/data/raw/ExAC.r0.3.1.sites.vep.vcf.gz:
 	sum data/raw/ExAC.r0.3.1.sites.vep.vcf.gz
 	head -1 data/raw/ExAC.md5sum.txt
 	sha256sum data/raw/ExAC.r0.3.1.sites.vep.vcf.gz >> data/raw/SHA256SUMS
-
-data/raw/cancer_gene_census.csv:
-	# Download cancer gene census for annotation in analysis
-	# Requires Password
-	sftp "daniel.wells@well.ox.ac.uk"@sftp-cancer.sanger.ac.uk
-	get /files/grch38/cosmic/v77/cancer_gene_census.csv data/raw/cancer_gene_census.csv
-	#595 genes
-
-data/raw/vogelstein_driver_genes.tdv:
-	# Requires manual download
 
 # $(TGCA_RNAseq_data):
 # 	# Requires manual download
