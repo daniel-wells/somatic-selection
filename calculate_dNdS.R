@@ -10,6 +10,12 @@ observed_variants <- readRDS("data/coding.mutations.filtered.rds")
 setkey(observed_variants,icgc_mutation_id,icgc_donor_id,Ensembl.Transcript.ID)
 
 print("observed_variants summary:")
+print(paste(nrow(observed_variants),"total mutations")
+print(paste(nrow(observed_variants[,.N,by=Ensembl.Gene.ID]),"total genes")
+print(paste(nrow(observed_variants[,.N,by=icgc_donor_id]),"total donors")
+print(paste(nrow(observed_variants[,.N,by=project_code]),"total projects")
+
+print("observed_variants summary:")
 print(summary(observed_variants))
 
 # which project/primary site has the most mutations?
