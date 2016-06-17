@@ -140,6 +140,7 @@ archive.file("results/funnel.pdf")
 pdf("results/funnel.pdf", width=16, height=9, onefile = TRUE)
 ggplot(dNdS.by.gene, aes(total.mut,odds.ratio)) + 
 	geom_point(aes(colour = is.significant),alpha=0.5,size=0.5) + 
+	theme_classic() + 
 	theme(legend.position="bottom",text=element_text(size = 17)) + 
 	scale_colour_manual(name="significant? (q<0.1)",  values =c("black", "red")) + 
 	scale_y_log10() + 
@@ -178,6 +179,7 @@ ggplot(dNdS.by.gene, aes(log2.odds.ratio,abs(log(p.value,10)))) +
 	geom_point(aes(colour = cancer.gene),alpha=0.3,size=0.5) + 
 	scale_colour_manual(name="In COSMIC cancer gene census?",
 		values =c("black", "red")) + 
+	theme_classic() + 
 	theme(legend.position="bottom",
 		text=element_text(size = 17)) + 
 	scale_y_log10() + 
