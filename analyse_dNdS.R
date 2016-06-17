@@ -108,12 +108,12 @@ print(paste(nrow(dNdS.by.gene),"entries (genes)"))
 print(paste(nrow(dNdS.by.gene[total.mut>37]),"genes have 80% power (>37 mutations)"))
 #11,407 / 17,929
 
-# mean effect size
-print(paste(dNdS.by.gene[q.value<0.1 & odds.ratio>1,.(mean(log2.odds.ratio))],"mean log2 odds ratio"))
 
-# how many sig genes
+# how many sig genes & mean effect size
 print(paste(nrow(dNdS.by.gene[q.value<0.1 & odds.ratio>1]),"genes with q<0.1 positive selection"))
+print(paste(dNdS.by.gene[q.value<0.1 & odds.ratio>1,.(mean(log2.odds.ratio))],"mean log2 odds ratio"))
 print(paste(nrow(dNdS.by.gene[q.value<0.1 & odds.ratio<1]),"genes with q<0.1 negative selection"))
+print(paste(dNdS.by.gene[q.value<0.1 & odds.ratio<1,.(mean(log2.odds.ratio))],"mean log2 odds ratio"))
 
 # how many known cancer genes
 print(paste(sum(dNdS.by.gene[q.value<0.1 & odds.ratio>1,cancer.gene.vogelstein]),"vogelstein cancer genes with q<0.1"))
