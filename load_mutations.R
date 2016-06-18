@@ -27,8 +27,6 @@ mutations[, c("project_code","chromosome","chromosome_strand","mutation_type","c
 # Save all mutations as cache
 saveRDS(mutations,"data/simple.somatic.mutations.aggregated.rds",compress = FALSE)
 
-##### Filter mutations based on mappability #####
-
 # Save all coding substitutions
 coding.mutations <- mutations[consequence_type %in% c("missense_variant", "synonymous_variant", "frameshift_variant","disruptive_inframe_deletion","disruptive_inframe_insertion","inframe_deletion","inframe_insertion","start_lost","stop_lost","stop_gained","exon_loss_variant")]
 
