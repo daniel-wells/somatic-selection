@@ -20,8 +20,6 @@ print(summary(observed_variants))
 
 # which project/primary site has the most mutations?
 project.info <- fread("data/raw/ICGC_projects.tsv")
-setnames(project.info, "Project Code", "project_code")
-setnames(project.info, "Primary Site", "primary_site")
 project.groupings <- project.info[,.(project_code,primary_site)]
 
 project.groupings[order(primary_site)]
