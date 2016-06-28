@@ -52,9 +52,12 @@ digraph dfd2{
 				mappability [label="mappability_100bp_windows_exons.bed.gz" shape=box, style=filled, fillcolor=yellow];
         		ExAC [label="ExAC" shape=box, style=filled, fillcolor=yellow];
 	        	vogelstein [label="Vogelstein Cancer List" shape=box, style=filled, fillcolor=yellow];
+	        	ICGClist [label="ICGC Project List" shape=box, style=filled, fillcolor=yellow];
 	        	cosmic [label="COSMIC Cancer List" shape=box, style=filled, fillcolor=yellow];
 	        	hgnc [label="HGNC gene names" shape=box, style=filled, fillcolor=yellow];
 	        	rna [label="TGCA RNAseq" shape=box, style=filled, fillcolor=yellow];
+
+	        	downloadAnnotations [label="download_annotations.R}" shape=Mrecord];
 
 			rnaTotal [label="tgca_RNAseq.total.tsv" shape=box, style=filled, fillcolor=lightblue];
 			rnaGene [label="RNAseq.by.gene.tsv" shape=box, style=filled, fillcolor=lightblue];
@@ -77,8 +80,8 @@ digraph dfd2{
         }
 
 	# Download Data
-	MakeDownload -> {fasta, ICGCindiv, ExAC, vogelstein, rna, mappability, cosmic, hgnc}
-	
+	MakeDownload -> {fasta, ICGCindiv, ExAC, rna, mappability, cosmic, hgnc}
+	MakeDownload -> downloadAnnotations -> {vogelstein, ICGClist}
 	# Load mutations
 	ICGCindiv -> load -> {observed,aggMut,observedTranscripts}
 	
