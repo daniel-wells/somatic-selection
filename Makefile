@@ -73,7 +73,7 @@ data/raw/HGNC.tsv:
 
 data/raw/mappability_100bp_windows_exons.bed.gz:
 	# Requires manual download
-	cp /mnt/lustre/users/bschuster/TCGA/Coverage/mappability_100bp_windows_exons.bed.gz /mnt/lustre/users/dwells/v21/data/raw/mappability_100bp_windows_exons.bed.gz
+	cp /mnt/lustre/users/bschuster/TCGA/Coverage/mappability_100bp_windows_exons.bed.gz data/raw/mappability_100bp_windows_exons.bed.gz
 
 ssm: $(ICGC_project_mutation_files)
 
