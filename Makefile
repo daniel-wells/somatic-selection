@@ -15,9 +15,9 @@ $(shell mkdir -p data data/raw data/raw/ICGC/ logs code archive results)
 ####### Download Raw Data #######
 #################################
 
-data/raw/ICGC_projects%tsv data/raw/vogelstein_driver_genes%tdv: download_annotations.R
-	# Download list of projects and vogelstein driver gene list
-	Rscript download_annotations.R
+data/raw/vogelstein_driver_genes.tdv: code/download_vogelstein.R
+	# Download vogelstein driver gene list
+	Rscript code/download_vogelstein.R
 
 data/raw/cancer_gene_census.csv:
 	# Download cancer gene census for annotation in analysis
