@@ -107,7 +107,7 @@ data/coding.mutations%rds data/observed.transcripts%rds: code/load_mutations.R
 
 # Choose which transcripts to use
 data/final.transcript.list.rds: code/filter_transcripts.R data/observed.transcripts.rds data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz
-	Rscript filter_transcripts.R
+	Rscript code/filter_transcripts.R
 
 # Filter variants
 data/coding.mutations.filtered%rds data/single.base.coding.substitutions%rds: code/filter_variants.R data/coding.mutations.rds data/ExAC.bed data/raw/mappability_100bp_windows_exons.bed.gz data/final.transcript.list.rds
@@ -115,7 +115,7 @@ data/coding.mutations.filtered%rds data/single.base.coding.substitutions%rds: co
 
 # Count trimers
 data/coding.trimer.counts.rds: code/trimerise_codome.R data/final.transcript.list.rds data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz
-	Rscript trimerise_codome.R
+	Rscript code/trimerise_codome.R
 
 # Calculate substitution matrix / mutation profiles
 data/motif.probabilities.rds: code/calculate_mutation_profiles.R data/coding.trimer.counts.rds data/single.base.coding.substitutions.rds
