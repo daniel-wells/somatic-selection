@@ -8,6 +8,8 @@ all: raw_data results
 print-%  : ; @echo $* = $($*)
 
 
+# module load apps/R/3.2.2/gcc-4.4.7+lapack-3.5.0+blas-20110419
+# module load apps/bcftools/1.0/gcc-4.4.7
 
 # create all required directories
 $(shell mkdir -p data data/raw data/raw/ICGC/ logs code archive results)
