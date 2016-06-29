@@ -87,9 +87,9 @@ raw_data: data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz $(ICGC_project_mutation_
 #######
 ####### ExAC
 #######
-data/raw/ExAC.bed: data/raw/ExAC.r0.3.1.sites.vep.vcf.gz data/raw/ExAC.r0.3.1.sites.vep.vcf.gz.tbi
-	module load apps/bcftools/1.0/gcc-4.4.7
-	bcftools query -f "%CHROM\t%POS\t%ID\t%QUAL\t%REF\t%ALT\t%AF\n" /mnt/lustre/data/ExAC/ExAC.r0.3.1.sites.vep.vcf.gz | perl -ne '@l=split; if (/,/){@a=split /,/, $l[5]; @af=split /,/, $l[6]; for (0..$#a){print join("\t", $l[0], $l[1]-1, $l[1], @l[2..4], $a[$_], $af[$_])."\n"}}else{print join("\t", $l[0], $l[1]-1, $l[1], @l[2..6])."\n"}' > data/ExAC.bed
+data/ExAC.bed: data/raw/ExAC.r0.3.1.sites.vep.vcf.gz data/raw/ExAC.r0.3.1.sites.vep.vcf.gz.tbi code/convert.ExAC.sh
+	sh code/convert.ExAC.sh
+	# in a seperate script because perl $_ conflicts with make $_
 
 #######
 ####### RNAseq
