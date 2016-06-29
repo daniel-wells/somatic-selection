@@ -19,7 +19,7 @@ data/raw/vogelstein_driver_genes.tdv: code/download_vogelstein.R
 	# Download vogelstein driver gene list
 	Rscript code/download_vogelstein.R
 
-data/raw/cancer_gene_census.csv:
+data/raw/cancer_gene_census.csv: cancer_gene_census.csv
 	# Download cancer gene census for annotation in analysis
 	# Requires Password
 	#sftp "daniel.wells@well.ox.ac.uk"@sftp-cancer.sanger.ac.uk
