@@ -1,5 +1,5 @@
 .PHONY : results all
-results: results/volcano.pdf results/dNdS_by_gene.tsv
+results: results/dNdS_by_gene.tsv
 all: raw_data results
 
 
@@ -48,7 +48,8 @@ data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz:
 	sha256sum data/raw/Homo_sapiens.GRCh37.75.cds.all.fa.gz >> data/raw/SHA256SUMS
 
 
-data/raw/data/raw/ExAC.r0.3.1.sites.vep.vcf.gz:
+data/raw/ExAC.r0.3.1.sites.vep.vcf%gz data/raw/ExAC.r0.3.1.sites.vep.vcf.gz%tbi: data/url-list%txt
+	# Not really a dependency but need something to stop it running twice
 	# Download ExAC for SNP frequencies ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3.1/
 	# see also /mnt/lustre/data/ExAC/
 	curl ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3.1/ExAC.r0.3.1.sites.vep.vcf.gz -o data/raw/ExAC.r0.3.1.sites.vep.vcf.gz
@@ -102,7 +103,7 @@ data/ExAC.bed: data/raw/ExAC.r0.3.1.sites.vep.vcf.gz data/raw/ExAC.r0.3.1.sites.
 #######
 
 # Load/filter Mutations
-data/coding.mutations%rds data/observed.transcripts%rds: code/load_mutations.R
+data/coding.mutations%rds data/observed.transcripts%rds: code/load_mutations.R $(ICGC_project_mutation_files)
 	Rscript code/load_mutations.R
 
 # Choose which transcripts to use
@@ -141,7 +142,7 @@ data/dNdS_byproject%tsv data/dNdS_bysite%tsv data/dNdS_pancancer%tsv: code/calcu
 
 # Plot results
 # % are to ensure rule is not run twice for both targets when running make in parallel
-results/volcano%pdf results/dNdS_by_gene%tsv: code/analyse_dNdS.R data/raw/cancer_gene_census.csv data/dNdS_byproject.tsv data/dNdS_bysite.tsv data/dNdS_pancancer.tsv data/raw/vogelstein_driver_genes.tdv data/raw/HGNC.tsv
+results/dNdS_by_gene.tsv: code/analyse_dNdS.R data/raw/cancer_gene_census.csv data/dNdS_byproject.tsv data/dNdS_bysite.tsv data/dNdS_pancancer.tsv data/raw/vogelstein_driver_genes.tdv data/raw/HGNC.tsv
 	# possibly add data/RNAseq.by.gene.tsv
 	# Generate histogram and distribution of dNdS
 	Rscript code/analyse_dNdS.R
