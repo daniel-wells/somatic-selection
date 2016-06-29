@@ -14,15 +14,11 @@ setnames(icgc, c("Project Code","Primary Site"), c("project_code","primary_site"
 # http://cancergenome.nih.gov/publications/publicationguidelines
 # http://docs.icgc.org/portal/publication/#current-moratorium-status-for-icgc-projects
 icgc <- icgc[!project_code %in% c("SKCA-BR","COCA-CN","LUSC-CN","LIAD-FR","BOCA-FR","LIHM-FR","PACA-IT","BTCA-JP","LICA-CN","LAML-CN","WT-US")]
+icgc <- icgc[SSM!=0]
 
 write.table(icgc, file = "data/raw/ICGC_projects.tsv", sep = "\t",row.names = FALSE,quote = FALSE)
 
-##### Vogelstein Cancer Driver Gene List
+# write file of urls
+urls <- paste0("https://dcc.icgc.org/api/v1/download?fn=/release_21/Projects/",icgc$project_code,"/simple_somatic_mutation.open.",icgc$project_code,".tsv.gz")
 
-#install.packages("gdata")
-library(gdata)
-# from supplementary of http://doi.org/10.1126/science.1235122
-vogelstein <- read.xls("http://science.sciencemag.org/content/sci/suppl/2013/03/27/339.6127.1546.DC1/1235122TablesS1-4.xlsx", sheet=6,pattern="Gene Symbol")
-setnames(vogelstein,c("Gene.Symbol","Classification.","Ocogene.score..","Tumor.Suppressor.Gene.score..","Process","X..Mutated.Tumor.Samples.."),c("gene_name","classification","oncogene_score","tsg_score","process","tumour_sample_count"))
-vogelstein$X <- NULL
-write.table(vogelstein[1:125,],file = "data/raw/vogelstein_driver_genes.tdv", sep = "\t",row.names = FALSE,quote = FALSE)
+write.table(urls,"data/url-list.txt",sep = "",row.names = FALSE,col.names = FALSE,quote = FALSE)
