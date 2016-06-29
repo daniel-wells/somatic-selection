@@ -1,6 +1,6 @@
 .PHONY : results all
 .SECONDARY: # prevent intermed files from being deleted at the end!
-results: results/dNdS_by_gene.tsv
+results: results/dNdS_by_gene.tsv results/power_curve.pdf
 all: raw_data results
 
 
@@ -149,3 +149,10 @@ results/dNdS_by_gene.tsv: code/analyse_dNdS.R data/raw/cancer_gene_census.csv da
 	# possibly add data/RNAseq.by.gene.tsv
 	# Generate histogram and distribution of dNdS
 	Rscript code/analyse_dNdS.R
+
+#######
+####### Power Analysis
+#######
+
+results/power_curve.pdf: code/power_analysis.R
+	Rscript code/power_analysis.R
