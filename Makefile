@@ -1,4 +1,5 @@
 .PHONY : results all
+.SECONDARY: # prevent intermed files from being deleted at the end!
 results: results/dNdS_by_gene.tsv
 all: raw_data results
 
