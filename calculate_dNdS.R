@@ -230,10 +230,16 @@ transcript.list <- expected_variants.pancancer[order(p.value)][odds.ratio<1][1:3
 transcript.list.top <- expected_variants.pancancer[order(p.value)][odds.ratio>1][1:36]$Ensembl.Transcript.ID
 
 
-pdf("results/QC_mutation_distribution.pdf",width=16, height=9, onefile = TRUE)
+pdf("results/QC_mutation_distribution-S.top.pdf",width=16, height=9, onefile = TRUE)
 plot.mutdist(transcript.list.top)
+dev.off()
+pdf("results/QC_mutation_distribution-S.bottom.pdf",width=16, height=9, onefile = TRUE)
 plot.mutdist(transcript.list)
+dev.off()
+pdf("results/QC_mutation_distribution-N.top.pdf",width=16, height=9, onefile = TRUE)
 plot.mutdist.N(transcript.list.top)
+dev.off()
+pdf("results/QC_mutation_distribution-N.bottom.pdf",width=16, height=9, onefile = TRUE)
 plot.mutdist.N(transcript.list)
 dev.off()
 
