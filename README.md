@@ -1,7 +1,7 @@
 # A ratiometric method for detecting somatic selection in cancer
 This code takes somatic mutation data from the [International Cancer Genome Consortium](ICGC.org) and for each gene calculates the ratio of nonsynonymous to synonymous mutations (normalised by codon composition etc.). Positively selected genes (cancer driver genes) will have a large ratio, negatively selected genes (essential genes / non-oncogene addiction genes) will have a small ratio. For a more detailed description refer to the [manuscript](https://doi.org/).
 
-By Daniel Wells and Benjamin Schuster-Böckler at the Ludwig Institute for Cancer Reasearch, University of Oxford
+By Daniel Wells and Benjamin Schuster-Böckler at the [Ludwig Institute](http://www.ludwig.ox.ac.uk/benjamin-schuster-boeckler-group-page) for Cancer Reasearch, University of Oxford
 
 ## Installation
 First ensure all [dependencies](README.md#Dependencies) are installed and loaded.
