@@ -27,19 +27,13 @@ data/raw/cancer_gene_census.csv: cancer_gene_census.csv
 	#595 genes
 	cp cancer_gene_census.csv data/raw/cancer_gene_census.csv
 
-### Set release number here!
-data/url-list.txt: data/raw/ICGC_projects.tsv
-	for OUTPUT in $$(cut -f 1,7 data/raw/ICGC_projects.tsv | grep -Pv '(\t0|Project)' | cut -f 1) ; do \
-		echo "https://dcc.icgc.org/api/v1/download?fn=/release_21/Projects/$$OUTPUT/simple_somatic_mutation.open.$$OUTPUT.tsv.gz" >> data/url-list.txt \ ; \
-	done
-
 URLS=$(shell awk '{printf "%s\n", $$1}' data/url-list.txt)
 
 ICGC_project_mutation_files=$(addprefix data/raw/ICGC/,$(notdir $(URLS)))
 
 # Download simple somatic mutation files
 $(ICGC_project_mutation_files): data/url-list.txt
-	mkdir -p $(dir $@)
+	# mkdir -p $(dir $@)
 	curl "$(filter $(addprefix %/,$(notdir $@)),$(URLS))" -o $@
 	# 2.6G in total
 	#? find data/raw/ICGC -name "simple_somatic_mutation.open.*.tsv.gz" -exec touch {} \;
