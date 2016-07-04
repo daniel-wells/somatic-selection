@@ -360,12 +360,11 @@ dev.off()
 # Overall Dist
 archive.file("results/OR_distribution.pdf")
 pdf("results/OR_distribution.pdf", width=15, height=8, onefile = TRUE)
-ggplot(dNdS.by.gene, aes(odds.ratio)) + 
+ggplot(dNdS.by.gene, aes(log2.odds.ratio)) + 
 	geom_histogram(binwidth = 0.01) + 
-	geom_vline(xintercept = 1,color = "red") + 
+	geom_vline(xintercept = 0,color = "red") + 
 	theme_grey(base_size = 17) + 
-	labs(x=bquote(Log[2]~'Odds Ratio'),y="Number of genes") + 
-	scale_x_log10()
+	labs(x=bquote(Log[2]~'Odds Ratio'),y="Number of genes") 
 dev.off()
 
 # Cancer vs normal density dist
