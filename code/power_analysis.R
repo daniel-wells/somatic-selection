@@ -10,12 +10,20 @@ for (LOR in LORs){
 # average prob of s
 prob.s <- 0.28
 
+# given number of synonymous observed, and odds ratio, calculate new n/s, and total mutations,
+# given (n/s) / (N/S) = odds raito, n is only unknown
+ratio.n.s = 2^(LOR) * (1-0.28)/0.28
+# total mut = n + s
+total.mut = obs.s * ratio.n.s + obs.s
+new.prob.s = obs.s / total.mut
+
 # Calculate no of mutations X which has P-value P(X|H0)<0.0005, two tailed alpha=0.001 as coded critical value
 crit.S.l <- qbinom(0.0005,size=(total.mut),prob=prob.s)-1
 crit.S.u <- qbinom(0.9995,size=(total.mut),prob=prob.s)
 actual.p.l <- pbinom(crit.S.l,total.mut,prob.s)
 actual.p.u <- 1-pbinom(crit.S.u,total.mut,prob.s)
 total.p <- actual.p.l + actual.p.u
+
 # Calculate new S for H1 wich has effect size of |log(OR,2)|=0.5
 # (n/s) / (N/S) = 2 | 0.5
 # S/(S+N)=0.28 , S+N=total.mut
@@ -35,12 +43,13 @@ if (graph==TRUE){
 # number of possible S  
 all.S <- seq(0,total.mut,by=1)
 
-# distribution of number of S, given total number of mutations in gene 100
+# distribution of number of S, given total number of mutations in gene 50
 y <- dbinom(all.S,total.mut,prob.s)
 plot(all.S,y,ylim=c(0,0.25),type='o')
 abline(v=crit.S.l,col="red")
 abline(v=crit.S.u,col="red")
 lines(0:total.mut,dbinom(all.S,total.mut,new.prob.s),col="blue",type='o')
+legend('topright',lty=1,c("Null Hypothesis","Data"),col=c("black","blue"))
 }
 
 # probability of rejecting H0 if H1 is true
